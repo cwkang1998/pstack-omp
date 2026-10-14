@@ -52,7 +52,7 @@ jobs:
           body: |
             Automated update from the pinned authoritative Cursor pstack source.
 
-            The updater preserves OMP-owned adapters and fails before writing when
-            upstream changes a protected portability adaptation.
+            The updater three-way merges OMP adaptations with upstream and fails
+            before opening a pull request when they conflict.
           branch: automation/upstream-pstack
           delete-branch: true
