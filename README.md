@@ -86,11 +86,12 @@ The updater:
 
 1. Fetches the latest upstream revision.
 2. Normalizes known Cursor runtime bindings for OMP.
-3. Updates only upstream-owned files.
-4. Preserves OMP adapters and protected portability adaptations.
-5. Stops before writing if an adapted file changed upstream.
-6. Runs verification, updater tests, Bun tests, and strict TypeScript checking.
-7. Opens a pull request only after those checks pass.
+3. Three-way merges every file against the pinned upstream, so OMP edits survive
+   and upstream edits land around them.
+4. Leaves conflict markers where upstream and the OMP port changed the same
+   lines, and exits with status 2 until they are resolved.
+5. Runs verification, updater tests, Bun tests, and strict TypeScript checking.
+6. Opens a pull request only after those checks pass.
 
 Run it locally:
 
@@ -100,8 +101,8 @@ npm run sync:apply -- --dry-run
 npm run sync:apply
 ```
 
-Protected adaptation changes require a human merge decision. The updater never
-silently overwrites them.
+Conflicting adaptations need a human merge decision. `npm run verify` fails while
+any conflict marker remains, so the updater never silently overwrites them.
 
 ## Development and verification
 

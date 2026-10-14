@@ -11,7 +11,6 @@ import {
   stat,
   writeFile,
 } from "node:fs/promises";
-import { readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -20,8 +19,6 @@ const root = resolve(
   process.env.PSTACK_SYNC_ROOT ? "." : "..",
 );
 const lockPath = join(root, "upstream.lock.json");
-const boundaryLock = JSON.parse(readFileSync(lockPath, "utf8"));
-
 function git(args, cwd) {
   return execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
 }
@@ -40,13 +37,6 @@ export function normalizeContent(source) {
     .replaceAll("grok-4.6-fast-xhigh", "host-configured role/model")
     .replaceAll("claude-opus-5-thinking-xhigh", "host-configured role/model")
     .replaceAll(/\bTask (?:subagent|tool)\b/g, "host task runner");
-}
-
-export function isProtectedPath(path) {
-  return (
-    boundaryLock.protectedPaths.includes(path) ||
-    boundaryLock.protectedPrefixes.some((prefix) => path.startsWith(prefix))
-  );
 }
 
 async function filesUnder(directory) {
@@ -88,7 +78,7 @@ async function sourceRepository(lock, sourceArg) {
         { cwd: path },
       );
     } catch {
-      // A missing baseline makes protected-file review fail closed.
+      // A missing baseline makes apply fail closed.
     }
     return { path, cleanup: path };
   } catch (error) {
@@ -143,9 +133,21 @@ async function mergeThreeWay(current, base, latest) {
   }
 }
 
+async function unresolvedConflicts(lock) {
+  const unresolved = [];
+  for (const destination of new Set(lock.sourceRoots.map((mapping) => mapping.destination))) {
+    for (const path of await filesUnder(join(root, destination))) {
+      if (/^(<{7} omp|>{7} upstream-latest)$/mu.test(await readFile(path, "utf8"))) {
+        unresolved.push(relative(root, path));
+      }
+    }
+  }
+  return unresolved;
+}
+
 async function applyUpdate(lock, sourceRoot, commit, dryRun) {
   if (!baselineAvailable(sourceRoot, lock.commit)) {
-    console.error(`Pinned upstream commit ${lock.commit} is unavailable, so protected files cannot be merged.`);
+    console.error(`Pinned upstream commit ${lock.commit} is unavailable, so OMP-adapted files cannot be merged.`);
     return 2;
   }
 
@@ -172,12 +174,13 @@ async function applyUpdate(lock, sourceRoot, commit, dryRun) {
         // New upstream file.
       }
       let next = latest;
-      if (isProtectedPath(destinationKey) && current !== null) {
+      if (current !== null && current !== latest) {
         const base = baselineContent(sourceRoot, lock.commit, sourcePath);
-        if (base === latest) continue;
-        const merged = await mergeThreeWay(current, base, latest);
-        next = merged.text;
-        if (merged.conflicted) conflicts.push(destinationKey);
+        if (current !== base) {
+          const merged = await mergeThreeWay(current, base, latest);
+          next = merged.text;
+          if (merged.conflicted) conflicts.push(destinationKey);
+        }
       }
       if (current === next && (currentMode & 0o111) === (mode & 0o111)) continue;
       changed.push(destinationKey);
@@ -202,7 +205,7 @@ async function applyUpdate(lock, sourceRoot, commit, dryRun) {
     );
   }
   if (conflicts.length > 0) {
-    console.error(`${conflicts.length} protected OMP-adapted files have merge conflicts to resolve:`);
+    console.error(`${conflicts.length} OMP-adapted files have merge conflicts to resolve:`);
     for (const path of conflicts) console.error(`- ${path}`);
     return 2;
   }
@@ -222,6 +225,12 @@ export async function main(argv = process.argv.slice(2)) {
     const commit = git(["rev-parse", "HEAD"], source.path);
     console.log(`pinned=${lock.commit}`);
     console.log(`latest=${commit}`);
+    const unresolved = await unresolvedConflicts(lock);
+    if (unresolved.length > 0) {
+      console.error("Resolve the merge conflicts from the last sync first:");
+      for (const path of unresolved) console.error(`- ${path}`);
+      return 2;
+    }
     if (commit === lock.commit) {
       console.log("Upstream is already pinned at the latest checked revision.");
       return 0;
