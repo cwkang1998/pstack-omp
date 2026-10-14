@@ -1,6 +1,6 @@
 ### Bug fix
 
-**You own this task. Plan, review, verify.** Delegate investigation and the fix through the active adapter; stay in the lead.
+**You own this task. Plan, review, verify.** Delegate investigation and the fix through the active adapter, and stay in the lead. Set each child's reasoning effort for the job through the task runner's effort setting when the host exposes it, per the Delegation section.
 
 Be scientific. Every shipped line traces to runtime evidence. Belt-and-suspenders that "might help" is a hypothesis, not a fix; it does not ship. When evidence refutes a hypothesis, revert what it motivated. The smallest change the evidence justifies ships, nothing more. Same discipline for Perf, where the evidence is the trace.
 

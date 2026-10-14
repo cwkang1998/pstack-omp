@@ -53,6 +53,9 @@ const requiredSkills = new Set([
   "principle-subtract-before-you-add",
   "principle-type-system-discipline",
   "rust-best-practices",
+  "ketchup",
+  "sharpen",
+  "in-your-own-words",
 ]);
 
 const failures = [];

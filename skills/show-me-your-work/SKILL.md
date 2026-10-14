@@ -66,7 +66,7 @@ Correct the log, not the story. The audit never edits or removes a row, even an 
 
 ## Cross-model review of the trail
 
-Before handing back, launch a `reviewer` subagent on a different model family from the one that did the work when the host exposes model identity. Otherwise use a distinct reviewer role or the nearest independent review facility the host provides. If no independent child facility exists, report that limit instead of claiming cross-model review. Self-review is not a substitute. The reviewer reads the audit trail and the run's transcript when available, then flags what the user should pay attention to. Not a redo of the work, a scan for what's suboptimal or risky.
+Before handing back, launch a `reviewer` subagent on a different model family from the one that did the work when the host exposes model identity. Otherwise use a distinct reviewer role or the nearest independent review facility the host provides. If no independent child facility exists, report that limit instead of claiming cross-model review. Self-review is not a substitute. The reviewer reads the audit trail and the run's transcript when available, then flags what the user should pay attention to. Not a redo of the work, a scan for what's suboptimal or risky. Set each child's reasoning effort for the job through the task runner's effort setting when the host exposes it, per the Delegation section of the **poteto-mode** skill.
 
 - Decisions logged with weak or absent evidence.
 - Verification steps skipped or claimed without proof in the transcript.
