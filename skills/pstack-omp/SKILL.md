@@ -12,13 +12,14 @@ While this skill is active, its role map is the specific pstack execution contra
 ## Canonical role map
 
 Use the live host's configured names. This mapping targets OMP's bundled task
-agents.
+agents plus the `planner`, `designer`, and `librarian` agents this package ships
+in `agents/`.
 
 | Canonical role | OMP agent | Contract |
 |---|---|---|
 | `explorer` | `scout` | Read-only repository reconnaissance, trace reduction, narrow audits. |
 | `watcher` | `scout` | Observe one exact generation or external-state transition, then terminate. |
-| `planner` | `designer` | Technical planning, architecture, decomposition, sequencing, and non-visual design candidates. |
+| `planner` | `planner` | Technical planning, architecture, decomposition, sequencing, and non-visual design candidates. |
 | `designer` | `designer` | Visual, interaction, and product-design candidates. |
 | `reviewer` | `reviewer` | Independent code, protocol, behavioral, or security review. |
 | `researcher` | `librarian` | Source-verified external library, framework, API, protocol, or version research. |
@@ -27,10 +28,11 @@ agents.
 | `owner` | `task` | One coupled multi-step implementation session retained through IRC follow-ups. |
 | `mechanical` | `sonic` | Fully specified low-judgment edits. Ambiguity returns to the root. |
 
-The reference OMP roster is closed:
+The reference roster is closed:
 
 ```text
 scout
+planner
 designer
 reviewer
 security-reviewer
@@ -39,13 +41,13 @@ task
 sonic
 ```
 
-A canonically routed task item's `agent` value must be one of those bundled names. Canonical role labels and model aliases are not agent names.
+A canonically routed task item's `agent` value must be one of those names. Canonical role labels and model aliases are not agent names.
 
 `poteto-agent` and `comment-sicko` are custom compatibility agents for direct named seams in imported skills. A direct compatibility call may use that custom agent name; ordinary canonical routing never does.
 
 ### Planning distinction
 
-The imported warning about a built-in planning subagent describes a source-host mechanism that bypassed the skill contract. OMP has no bundled `plan` agent. Canonical `planner` work uses `designer` with a technical-planning brief and does not pass source-host subagent fields.
+The imported warning about a built-in planning subagent describes a source-host mechanism that bypassed the skill contract. OMP has no bundled `plan` agent. Canonical `planner` work uses the package's `planner` agent and does not pass source-host subagent fields.
 
 ### Security review
 
@@ -84,13 +86,13 @@ Use one batch call for independent participants:
   "tasks": [
     {
       "name": "candidate-a",
-      "agent": "designer",
+      "agent": "planner",
       "task": "Standalone brief for architecture candidate A.",
       "isolated": false
     },
     {
       "name": "candidate-b",
-      "agent": "designer",
+      "agent": "planner",
       "task": "Standalone brief for architecture candidate B.",
       "isolated": false
     }
@@ -232,7 +234,8 @@ Recommended role aliases:
 | OMP agent | Recommendation |
 |---|---|
 | `scout` | `@smol` |
-| `designer` | `@designer` |
+| `planner` | `@plan` |
+| `designer` | `@plan` |
 | `reviewer` | `@advisor` |
 | `security-reviewer` | `@advisor` |
 | `librarian` | `@smol` |
