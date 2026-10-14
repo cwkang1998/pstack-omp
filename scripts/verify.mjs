@@ -172,6 +172,22 @@ for (const path of markdownFiles) {
   }
 }
 
+const skillFiles = [];
+const collectAll = async (directory) => {
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    if (entry.name === "node_modules") continue;
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) await collectAll(path);
+    else skillFiles.push(path);
+  }
+};
+await collectAll(skillsRoot);
+for (const path of skillFiles) {
+  if (/^(<{7}|>{7}) /mu.test(await readFile(path, "utf8"))) {
+    failures.push(`${relative(root, path)} contains unresolved merge conflict markers`);
+  }
+}
+
 const expectedSkillCount = requiredSkills.size;
 if (skillDirs.length < expectedSkillCount) {
   failures.push(`expected at least ${expectedSkillCount} skill directories, found ${skillDirs.length}`);

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
 
@@ -96,4 +96,76 @@ test("apply updates an upstream-owned file and advances the lock", async () => {
   } finally {
     await rm(fixture, { recursive: true, force: true });
   }
+});
+
+async function syncProtectedFile({ pinned, latest, adapted }) {
+  const fixture = await mkdtemp(join(tmpdir(), "pstack-merge-test-"));
+  const source = join(fixture, "source");
+  const target = join(fixture, "target");
+  const upstreamFile = join(source, "pstack/skills/poteto-mode/playbooks/feature.md");
+  const git = (...args) => execFileSync("git", args, { cwd: source, encoding: "utf8" }).trim();
+  await mkdir(dirname(upstreamFile), { recursive: true });
+  await mkdir(join(target, "skills/poteto-mode/playbooks"), { recursive: true });
+  await writeFile(upstreamFile, pinned);
+  git("init", "-q", "-b", "main");
+  git("config", "user.email", "test@example.invalid");
+  git("config", "user.name", "pstack test");
+  git("add", ".");
+  git("commit", "-q", "-m", "pinned");
+  const pinnedCommit = git("rev-parse", "HEAD");
+  await writeFile(upstreamFile, latest);
+  git("commit", "-qam", "latest");
+  await writeFile(join(target, "skills/poteto-mode/playbooks/feature.md"), adapted);
+  await writeFile(
+    join(target, "upstream.lock.json"),
+    `${JSON.stringify({
+      repository: "local",
+      ref: "main",
+      path: "pstack",
+      commit: pinnedCommit,
+      protectedPrefixes: ["skills/poteto-mode/"],
+      protectedPaths: [],
+      sourceRoots: [{ source: "pstack/skills", destination: "skills" }],
+    })}\n`,
+  );
+  let status = 0;
+  try {
+    execFileSync(
+      process.execPath,
+      [join(process.cwd(), "scripts/sync-upstream.mjs"), "--apply", "--source", source],
+      { cwd: target, env: { ...process.env, PSTACK_SYNC_ROOT: target }, stdio: "pipe" },
+    );
+  } catch (error) {
+    status = error.status;
+  }
+  const result = await readFile(join(target, "skills/poteto-mode/playbooks/feature.md"), "utf8");
+  const lock = JSON.parse(await readFile(join(target, "upstream.lock.json"), "utf8"));
+  await rm(fixture, { recursive: true, force: true });
+  return { status, result, lockAdvanced: lock.commit !== pinnedCommit };
+}
+
+test("apply merges upstream edits into a prefix-protected file and keeps OMP edits", async () => {
+  const { status, result, lockAdvanced } = await syncProtectedFile({
+    pinned: "1. how\n2. architect\n3. checkpoint\n4. delegate\n",
+    latest: "1. how\n2. architect\n3. checkpoint\n4. delegate to one owner\n",
+    adapted: "1. how\n2. architect via pstack-omp\n3. checkpoint\n4. delegate\n",
+  });
+
+  assert.equal(status, 0);
+  assert.equal(result, "1. how\n2. architect via pstack-omp\n3. checkpoint\n4. delegate to one owner\n");
+  assert.equal(lockAdvanced, true);
+});
+
+test("apply reports a conflict when upstream and OMP edit the same line", async () => {
+  const { status, result } = await syncProtectedFile({
+    pinned: "1. how\n2. architect\n",
+    latest: "1. how\n2. arena\n",
+    adapted: "1. how\n2. architect via pstack-omp\n",
+  });
+
+  assert.equal(status, 2);
+  assert.equal(
+    result,
+    "1. how\n<<<<<<< omp\n2. architect via pstack-omp\n=======\n2. arena\n>>>>>>> upstream-latest\n",
+  );
 });
