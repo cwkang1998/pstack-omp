@@ -156,6 +156,7 @@ try {
 
 const forbidden = [
   "~/.cursor/",
+  "~/.agents/skills/",
   ".cursor/skills/",
   ".cursor/plugins/",
   "subagent_type:",
