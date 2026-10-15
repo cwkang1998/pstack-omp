@@ -156,6 +156,7 @@ try {
 
 const forbidden = [
   "~/.cursor/",
+  "~/.agents/skills/",
   ".cursor/skills/",
   ".cursor/plugins/",
   "subagent_type:",
@@ -188,6 +189,34 @@ await collectAll(skillsRoot);
 for (const path of skillFiles) {
   if (/^(<{7}|>{7}) /mu.test(await readFile(path, "utf8"))) {
     failures.push(`${relative(root, path)} contains unresolved merge conflict markers`);
+  }
+}
+
+const ompBundledAgents = new Set(["scout", "reviewer", "security-reviewer", "task", "sonic"]);
+const packageAgents = new Set();
+for (const entry of await readdir(join(root, "agents"))) {
+  if (!entry.endsWith(".md")) continue;
+  const path = join(root, "agents", entry);
+  const frontmatter = (await readFile(path, "utf8")).match(/^---\n([\s\S]*?)\n---/u)?.[1] ?? "";
+  const name = frontmatter.match(/^name:\s*(\S+)/mu)?.[1];
+  if (name !== entry.slice(0, -3)) {
+    failures.push(`${relative(root, path)} frontmatter name does not match its filename`);
+  }
+  for (const key of ["description", "model"]) {
+    if (!new RegExp(`^${key}:`, "mu").test(frontmatter)) {
+      failures.push(`${relative(root, path)} is missing frontmatter ${key}`);
+    }
+  }
+  packageAgents.add(name);
+}
+const adapterPath = join(skillsRoot, "pstack-omp", "SKILL.md");
+const adapter = await readFile(adapterPath, "utf8");
+const roster = adapter.match(/The reference roster is closed:\n\n```text\n([\s\S]*?)\n```/u)?.[1];
+const mappedAgents = [...adapter.matchAll(/^\| `[a-z]+` \| `([a-z-]+)` \|/gmu)].map((match) => match[1]);
+if (!roster) failures.push(`${relative(root, adapterPath)} is missing the closed agent roster`);
+for (const agent of new Set([...(roster?.split("\n") ?? []), ...mappedAgents])) {
+  if (!ompBundledAgents.has(agent) && !packageAgents.has(agent)) {
+    failures.push(`${relative(root, adapterPath)} routes to ${agent}, which is neither OMP-bundled nor shipped in agents/`);
   }
 }
 
