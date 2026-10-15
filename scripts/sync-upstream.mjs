@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import {
@@ -8,10 +7,8 @@ import {
   readFile,
   readdir,
   rm,
-  stat,
   writeFile,
 } from "node:fs/promises";
-import { readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -20,14 +17,8 @@ const root = resolve(
   process.env.PSTACK_SYNC_ROOT ? "." : "..",
 );
 const lockPath = join(root, "upstream.lock.json");
-const boundaryLock = JSON.parse(readFileSync(lockPath, "utf8"));
-
 function git(args, cwd) {
   return execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
-}
-
-function hash(value) {
-  return createHash("sha256").update(value).digest("hex");
 }
 
 export function normalizeContent(source) {
@@ -44,13 +35,6 @@ export function normalizeContent(source) {
     .replaceAll("grok-4.6-fast-xhigh", "host-configured role/model")
     .replaceAll("claude-opus-5-thinking-xhigh", "host-configured role/model")
     .replaceAll(/\bTask (?:subagent|tool)\b/g, "host task runner");
-}
-
-export function isProtectedPath(path) {
-  return (
-    boundaryLock.protectedPaths.includes(path) ||
-    boundaryLock.protectedPrefixes.some((prefix) => path.startsWith(prefix))
-  );
 }
 
 async function filesUnder(directory) {
@@ -92,7 +76,7 @@ async function sourceRepository(lock, sourceArg) {
         { cwd: path },
       );
     } catch {
-      // A missing baseline makes protected-file review fail closed.
+      // A missing baseline makes apply fail closed.
     }
     return { path, cleanup: path };
   } catch (error) {
@@ -101,69 +85,97 @@ async function sourceRepository(lock, sourceArg) {
   }
 }
 
-async function sourcePathFor(lock, destination, sourceRoot) {
-  for (const mapping of lock.sourceRoots) {
-    const prefix = `${mapping.destination}/`;
-    if (destination.startsWith(prefix)) {
-      const candidate = join(mapping.source, destination.slice(prefix.length));
-      try {
-        await stat(join(sourceRoot, candidate));
-        return candidate;
-      } catch {
-        // Another source root may own this destination.
+function baselineAvailable(sourceRoot, commit) {
+  try {
+    execFileSync("git", ["cat-file", "-e", `${commit}^{commit}`], { cwd: sourceRoot, stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function baselineContent(sourceRoot, commit, sourcePath) {
+  try {
+    return normalizeContent(
+      execFileSync("git", ["show", `${commit}:${sourcePath}`], {
+        cwd: sourceRoot,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      }),
+    );
+  } catch {
+    return "";
+  }
+}
+
+async function mergeThreeWay(current, base, latest) {
+  const directory = await mkdtemp(join(tmpdir(), "pstack-merge-"));
+  try {
+    const paths = ["ours", "base", "upstream"].map((name) => join(directory, name));
+    await Promise.all([current, base, latest].map((text, index) => writeFile(paths[index], text)));
+    try {
+      const merged = execFileSync(
+        "git",
+        ["merge-file", "-p", "-L", "omp", "-L", "upstream-pinned", "-L", "upstream-latest", ...paths],
+        { encoding: "utf8" },
+      );
+      return { text: merged, conflicted: false };
+    } catch (error) {
+      if (typeof error.status === "number" && error.status > 0) {
+        return { text: error.stdout, conflicted: true };
+      }
+      throw error;
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+}
+
+async function unresolvedConflicts(lock) {
+  const unresolved = [];
+  for (const destination of new Set(lock.sourceRoots.map((mapping) => mapping.destination))) {
+    for (const path of await filesUnder(join(root, destination))) {
+      if (/^(<{7} omp|>{7} upstream-latest)$/mu.test(await readFile(path, "utf8"))) {
+        unresolved.push(relative(root, path));
       }
     }
   }
-  return null;
-}
-
-async function protectedChanges(lock, sourceRoot, commit) {
-  const changes = [];
-  for (const destination of lock.protectedPaths) {
-    const sourcePath = await sourcePathFor(lock, destination, sourceRoot);
-    if (!sourcePath) continue;
-    const latestPath = join(sourceRoot, sourcePath);
-    try {
-      const latest = await readFile(latestPath);
-      const baseline = execFileSync(
-        "git",
-        ["show", `${lock.commit}:${sourcePath}`],
-        { cwd: sourceRoot },
-      );
-      if (hash(latest) !== hash(baseline)) changes.push(destination);
-    } catch {
-      changes.push(`${destination} (baseline unavailable at ${commit})`);
-    }
-  }
-  return changes;
+  return unresolved;
 }
 
 async function applyUpdate(lock, sourceRoot, commit, dryRun) {
-  const conflicts = await protectedChanges(lock, sourceRoot, commit);
-  if (conflicts.length > 0) {
-    console.error("Upstream changed protected OMP-adapted files:");
-    for (const path of conflicts) console.error(`- ${path}`);
-    console.error("Review and merge those files manually before rerunning --apply.");
+  if (!baselineAvailable(sourceRoot, lock.commit)) {
+    console.error(`Pinned upstream commit ${lock.commit} is unavailable, so OMP-adapted files cannot be merged.`);
     return 2;
   }
 
   const changed = [];
+  const conflicts = [];
   for (const mapping of lock.sourceRoots) {
     const sourceDirectory = join(sourceRoot, mapping.source);
     for (const sourceFile of await filesUnder(sourceDirectory)) {
+      const sourcePath = relative(sourceRoot, sourceFile);
       const destination = join(
         root,
         mapping.destination,
         relative(sourceDirectory, sourceFile),
       );
       const destinationKey = relative(root, destination);
-      if (isProtectedPath(destinationKey)) continue;
-      const next = normalizeContent(await readFile(sourceFile, "utf8"));
+      const latest = normalizeContent(await readFile(sourceFile, "utf8"));
       let current = null;
       try {
         current = await readFile(destination, "utf8");
       } catch {
         // New upstream file.
+      }
+      let next = latest;
+      if (current !== null && current !== latest) {
+        const base = baselineContent(sourceRoot, lock.commit, sourcePath);
+        if (current !== base) {
+          const merged = await mergeThreeWay(current, base, latest);
+          next = merged.text;
+          if (merged.conflicted) conflicts.push(destinationKey);
+        }
       }
       if (current === next) continue;
       changed.push(destinationKey);
@@ -175,16 +187,21 @@ async function applyUpdate(lock, sourceRoot, commit, dryRun) {
   }
 
   if (changed.length === 0) {
-    console.log(`No managed skill changes for upstream ${commit}.`);
+    console.log(`No skill changes for upstream ${commit}.`);
     return 0;
   }
-  console.log(`${dryRun ? "Would update" : "Updated"} ${changed.length} managed files:`);
+  console.log(`${dryRun ? "Would update" : "Updated"} ${changed.length} files:`);
   for (const path of changed) console.log(`- ${path}`);
   if (!dryRun) {
     await writeFile(
       lockPath,
       `${JSON.stringify({ ...lock, commit }, null, 2)}\n`,
     );
+  }
+  if (conflicts.length > 0) {
+    console.error(`${conflicts.length} OMP-adapted files have merge conflicts to resolve:`);
+    for (const path of conflicts) console.error(`- ${path}`);
+    return 2;
   }
   return 0;
 }
@@ -202,6 +219,12 @@ export async function main(argv = process.argv.slice(2)) {
     const commit = git(["rev-parse", "HEAD"], source.path);
     console.log(`pinned=${lock.commit}`);
     console.log(`latest=${commit}`);
+    const unresolved = await unresolvedConflicts(lock);
+    if (unresolved.length > 0) {
+      console.error("Resolve the merge conflicts from the last sync first:");
+      for (const path of unresolved) console.error(`- ${path}`);
+      return 2;
+    }
     if (commit === lock.commit) {
       console.log("Upstream is already pinned at the latest checked revision.");
       return 0;
