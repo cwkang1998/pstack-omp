@@ -24,6 +24,7 @@ Use the exact names exposed by the live `task` tool; its inventory is authoritat
 | Routine scoped implementation | Omit `agent` for the default worker | `med` |
 | Difficult or ambiguous implementation | Omit `agent` for the default worker | `hi` |
 | Mechanical edits or data collection | `sonic` | `lo` |
+| Technical plan, architecture, or decomposition | `planner` | `med` or `hi` |
 | UI/UX implementation or review | `designer` | `med` or `hi` |
 | Code-quality verdict | `reviewer` | `med` or `hi` |
 | Security verdict | `security-reviewer` | `hi` |
