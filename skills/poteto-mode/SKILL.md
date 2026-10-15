@@ -136,6 +136,8 @@ Comments follow the same rule as the reply. Write them clean as you go; a flat "
 
 The matched playbook's steps are the first actions in the explicit plan, copied verbatim before any task-specific items and before you reason about the task. The failure mode is reading a playbook then writing a bespoke plan that drops its named steps (`architect`, the throughput checkpoint). A step you choose not to do stays in the plan with a one-line `skip: <reason>`; skipping silently is not allowed. Match the task to a playbook below and open its full steps at `skill://poteto-mode/playbooks/<title>.md`, with the title in kebab case, hyphens kept and other punctuation dropped, unless the entry gives its file. Copy its steps in verbatim.
 
+Playbook scripts live under `scripts/` in this skill's directory, the absolute path the host shows as `[Skill directory: …]` when the skill loads. Playbooks write that path as `<skill-dir>`.
+
 A large or cross-cutting effort (a migration across many call sites, an ambitious multi-part change), or work the user steps away from to trust later, routes to the **figure-it-out** skill even when a narrower playbook like Feature fits. Use **figure-it-out** whenever no bundled playbook fits. It designs a bespoke, rigorous playbook for the task. A standing project-scale program (multi-day, many stacked PRs, a fleet of delegated sessions under one coordinator) routes to **Orchestrate** instead. figure-it-out designs one bespoke run, orchestrate runs the program.
 
 - **Investigation.** Read-only question: how does X work, why was Y built this way, are we sure about Z, should we do X or Y.
