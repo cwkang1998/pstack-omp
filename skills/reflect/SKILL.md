@@ -14,31 +14,31 @@ Invoke when the user says "reflect" or "/reflect". Skip when the conversation is
 
 ## 1. Locate the active transcript
 
-The parent resolves its own transcript before fanning out. Use the host's active history resource, an explicit transcript directory, or `$PSTACK_TRANSCRIPTS_DIR`, in that order. Never scan another workspace or a global vendor history tree. If no transcript resolves, write a tight digest of the session and use that instead.
+Before fanning out, find this conversation's transcript. Search `$PSTACK_TRANSCRIPTS_DIR` when set. Otherwise it is the current session file `$PI_SESSION_FILE`, in this workspace's OMP sessions directory `$(dirname "$PI_SESSION_FILE")`. Read a known session ID through `history://`. Do not glob across `~/.omp/agent/sessions/*/`. That crosses workspace boundaries and reads private chats from unrelated projects.
 
 ```bash
-ls -t <agent-transcripts>/*.jsonl <agent-transcripts>/*/*.jsonl <agent-transcripts>/*/subagents/*.jsonl 2>/dev/null | head -10
+ls -t <transcripts-dir>/*.jsonl <transcripts-dir>/*/*.jsonl 2>/dev/null | head -10
 ```
 
-That covers the legacy flat (`<id>.jsonl`), current nested (`<id>/<id>.jsonl`), and subagent (`<parent>/subagents/<child>.jsonl`) layouts. For each candidate, read the first JSONL line. Take the file whose `message.content[0].text` contains the conversation's opening user prompt. If none matches, pass a tight digest of the session instead.
+That covers the session (`<timestamp>_<id>.jsonl`) and subagent (`<timestamp>_<id>/<name>.jsonl`) layouts. For each candidate, read the first JSONL line whose `message.role` is `user`. Take the file whose `message.content[0].text` contains the conversation's opening user prompt. If none matches, pass a tight digest of the session instead.
 
 ## 2. Spawn three reviewers in parallel
 
-Launch three reviewer children concurrently through the host's task facility. Reviewers need the host tools that look up the tickets, chat threads, and observability traces the transcript references. Forbid file writes in the brief. The parent applies edits. If the host cannot combine a read-only repository posture with external-tool access, keep tool access and enforce no writes in the brief.
+One message, three `task` calls, each in its lens's default role with MCP access. Reviewers need MCP access to look up the tickets, chat threads, and observability traces the transcript references, and a read-only mode that strips MCPs blocks that.
 
-Each reviewer and the synthesizer name a role line in the model configuration (`$PSTACK_CONFIG` or `.pstack/config.md`) and a default role. Set `model` to that line's value, or use the default role if the configuration or the line is missing. Leave `model` unset when the value is `auto` or `inherit-parent`. If the host task runner rejects a model, use the default role and say so. If it rejects the default, use the closest valid choice of the same family from its error message.
+Each reviewer and the synthesizer name a role line in `$PSTACK_CONFIG (or .pstack/config.md)` and a default role. Spawn each in that role. OMP applies the line's value through its model settings, never a `model` field on the task, and runs the role's default model if the configuration or the line is missing. An `auto` or `inherit-parent` value means the parent model. Report the resolved model OMP returns for each child, and say so when it fell back from the configured choice. If the host task runner rejects a slug, use the default and say so. If it rejects the default, use the closest valid agent for that role from its error message. Set each child's reasoning effort for the job through the task runner's effort setting when the host exposes it, per the Delegation section of the **poteto-mode** skill.
 
 | Lens | Role line | Default role | Prompt template |
 |---|---|---|---|
-| Judgment | `reflect judgment` | `reviewer` | `references/judgment-reviewer.md` |
+| Judgment | `reflect judgment, divergent, synthesizer` | `reviewer` | `references/judgment-reviewer.md` |
 | Tooling | `reflect tooling` | `researcher` | `references/tooling-reviewer.md` |
-| Divergent | `reflect divergent` | `designer` | `references/divergent-reviewer.md` |
+| Divergent | `reflect judgment, divergent, synthesizer` | `reviewer` | `references/divergent-reviewer.md` |
 
-Pass each template verbatim, substituting the transcript path or digest where marked. Reviewers return findings in their child reports.
+Pass each template verbatim, substituting the transcript path or digest where marked. Reviewers return findings in the `task` response body.
 
 ## 3. Synthesize
 
-Launch one child with the model from the `reflect synthesizer` line (default role `synthesizer`). It spot-verifies citations through host tools, so keep that access and forbid repository writes in its brief. Pass `references/synthesizer.md` verbatim, with each reviewer's full output inlined where marked. It returns an Accepted / Rejected / Backlog list.
+One `task` call in the `synthesizer` role, with its model from the `reflect judgment, divergent, synthesizer` line applied the same way and MCP access. It spot-verifies citations through MCP, and a read-only mode that strips MCPs blocks that. Pass `references/synthesizer.md` verbatim, with each reviewer's full output inlined where marked. It returns an Accepted / Rejected / Backlog list.
 
 ## 4. Structural enforcement check
 
@@ -50,14 +50,14 @@ Present the synthesizer's full Accepted / Rejected / Backlog output and wait for
 
 File each Backlog item to your team's devex or backlog tracker without waiting. Only the Accepted list waits for approval.
 
-Never edit a skill inside an installed plugin package or plugin cache. Before approval, show its destination: the project's or the user's own skills directory, not an install path. After approval, copy the skill folder there and edit the copy. Never open a PR or push.
+Never edit a skill under `~/.omp/plugins/`. Before approval, show its destination, `.omp/skills/<skill>/` or `~/.omp/agent/skills/<skill>/`. After approval, copy the skill folder there and edit the copy. Never open a PR or push.
 
 Follow each approved row's Routing exactly:
 
 - Trivial existing-skill edit (a one-line bullet, a tightened sentence, a stale fact corrected): the parent does it directly.
-- Substantive existing-skill edit (a new section, a new pattern table, more than ~10 lines): use the host's skill-authoring facility when available and run its draft / test / iterate loop. Otherwise apply that loop directly.
-- `tune description: <skill path>` (the skill exists but didn't trigger when it should have): use the host's skill-authoring facility when available, or directly run the same description-review loop.
-- `new skill: <kebab-name>`: use the host's skill-authoring facility when available, or author it directly from package conventions. Do not invent the shape ad hoc.
+- Substantive existing-skill edit (a new section, a new pattern table, more than ~10 lines): hand to an installed skill-authoring skill when one exists and run its draft / test / iterate loop, or run that loop directly.
+- `tune description: <skill path>` (the skill exists but didn't trigger when it should have): hand to that skill-authoring skill and run its description-optimization loop, or run that loop directly.
+- `new skill: <kebab-name>`: hand creation to that skill-authoring skill, or follow an existing skill's shape. Do not invent the shape ad hoc.
 
 If your environment ships a SKILL.md validator, run it on every touched skill before declaring done.
 

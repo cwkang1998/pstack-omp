@@ -53,6 +53,13 @@ const requiredSkills = new Set([
   "principle-subtract-before-you-add",
   "principle-type-system-discipline",
   "rust-best-practices",
+  "ketchup",
+  "ketchup-video",
+  "sharpen",
+  "in-your-own-words",
+  "statechart",
+  "create-formal-verification-skill",
+  "maintain-formal-verification-skill",
 ]);
 
 const failures = [];
@@ -153,6 +160,7 @@ try {
 
 const forbidden = [
   "~/.cursor/",
+  "~/.agents/skills/",
   ".cursor/skills/",
   ".cursor/plugins/",
   "subagent_type:",

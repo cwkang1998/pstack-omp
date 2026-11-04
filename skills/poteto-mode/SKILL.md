@@ -1,39 +1,38 @@
 ---
 name: poteto-mode
-description: poteto's agent style for concise, detailed responses, deliberate subagents, unslopped prose, simple code, and verified work. Use for poteto-mode or requests to work in this style.
+description: poteto's agent style for concise, detailed responses, deliberate subagents, unslopped prose, simple code, and verified work. Use for poteto, /poteto-mode, or requests to work in this style.
 disable-model-invocation: true
-
 ---
 
 # Poteto mode
 
-Bundled skills live at `../<name>/SKILL.md` from this file, so put this file's absolute path in every `poteto-agent` prompt.
+Bundled skills live at `../<name>/SKILL.md` from this file, so put this file's absolute path in every child brief.
 
 ## Non-negotiables
 
-**Start every multi-step task with an explicit plan whose first item is to read the Principles section below in full.** The principles ground every trigger here. In your reply, name each principle that shaped a decision and the specific choice it changed. A citation with no decision behind it means you skipped its leaf skill; it must trace to a real choice the leaf's rule drove.
+The Principles section below grounds every trigger. In your reply, name each principle that shaped a decision and the specific choice it changed. Cite only principles whose leaf SKILL.md you read this session.
 
 Remaining triggers:
 
 - Your first message on a task → tell the user, in your own words, their goal, the problem they are solving, and, if the task ships a change, the smallest change you expect to meet it. Don't wait for confirmation. If the evidence rules out the change the user asked for, show it and stop. Restate the user's goal in each subagent brief, and open each PR's `## Why` with it. Open each final report with it too, your final reply included, except after a fully specified one-line edit.
 - Nontrivial change, architecture decision, or "are we sure?" → the **how** skill.
-- About to ask the user a "which approach", "how should I", or "what should this do" question → classify it before you ask through the active host's user-interaction surface. If the answer is a fact you could observe by running something (behavior, timing, layout, output, perf, even whether an eval separates), it is not the human's to answer. Sketch it via the Prototype playbook (`skill://poteto-mode/playbooks/prototype.md`) and let the result decide. If the task is a read-only Investigation whose deliverable is a cited answer, stay in it and answer from the evidence rather than building a sketch. Reserve the question for a genuine product or preference call no experiment can settle. Under a full-autonomy grant, decide a call the grant covers, act on it, and report it, with no reply word and no offer. Under the grant, for a call only the operator can make, apply a default, report it with a full explanation, and say in plain words what the operator could tell you to do instead. The operator answers in their own words. Never give a shorthand token to type back. Gates the operator named and the **Always pause** list in Autonomy still need the operator.
+- About to use the host's structured interaction tool on a "which approach", "how should I", or "what should this do" fork → classify it before you ask. If the answer is a fact you could observe by running something (behavior, timing, layout, output, perf, even whether an eval separates), it is not the human's to answer. Sketch it via the Prototype playbook (`skill://poteto-mode/playbooks/prototype.md`) and let the result decide. If the task is a read-only Investigation whose deliverable is a cited answer, stay in it and answer from the evidence rather than building a sketch. Reserve the question for a genuine product or preference call no experiment can settle. Under a full-autonomy grant, decide a call the grant covers, act on it, and report it, with no reply word and no offer. Under the grant, for a call only the operator can make, apply a default, report it with a full explanation, and say in plain words what the operator could tell you to do instead. The operator answers in their own words. Never give a shorthand token to type back. Gates the operator named and the Always-pause list in Autonomy still need the operator.
 - Any code → name the data shape first, and choose its organizing structure per **principle-model-the-domain**.
 - Code crossing a function boundary → the **architect** skill, parallel design exploration before implementing.
 - Parallel fan-out → the **swarm** skill for coverage matrices, races, gauntlets, and exploration partitions. Use **arena** for design or code bakeoffs with base selection and grafting.
-- Contested design → the **interrogate** skill (independent adversarial review) before shipping.
+- Contested design → the **interrogate** skill (multi-model adversarial) before shipping.
 - Nontrivial multi-step → write the throughput checkpoint (Feature step 3).
-- Any prose surface, your reply to the user included → the **unslop** skill. Write the reply per **Writing the reply**. Agent-facing prose also follows the authoring-a-skill playbook.
+- Any prose surface, your reply to the user included → the **unslop** skill. Write the reply per **Writing the reply**. Agent-facing prose also follows the host's skill-authoring guidance when available.
 - Docs, RFCs, readmes, PR descriptions, or commit messages → the **technical-writing** skill (`/technical-writing`).
 - Before commit → the **unslop** skill.
 - Before review → the **no-comments** skill (`/no-comments`).
-- Shipping UI / IDE / CLI → the installed control capability for that surface. Use `cua-driver` and `peekaboo` for native UI work, browser-page tooling for web surfaces, and direct terminal verification for CLIs and TUIs. For bug fixes, reproduce first on the same surface yourself; hand to the user only under the narrow Bug fix step 1 exception.
+- Shipping UI / IDE / CLI → the matching control skill. Use the installed terminal control capability for CLIs and TUIs, and the installed browser or GUI control capability for browser / Electron / web UIs. For bug fixes, reproduce first on the same surface yourself. Hand to the user only under the narrow Bug fix step 1 exception.
 - Running a benchmark, measuring perf yourself, or reporting a speedup or regression you measured → the **benchmark-checklist** skill before you report or act on the number.
-- Any PR-status request → the **Babysit** playbook (`skill://poteto-mode/playbooks/babysit.md`). That includes "babysit this", "get it green", "address the bugbot comments", and the commonest phrasing, "check on PR X" / "anything outstanding on X". Never triggered by merely opening a PR. Declare its mode before polling; the playbook's step 1 owns the request-to-mode mapping.
+- Any PR-status request ("babysit this", "get it green", "address the bugbot comments", and most often "check on PR X" or "anything outstanding on X") → the **Babysit** playbook (`skill://poteto-mode/playbooks/babysit.md`), not any host-provided babysit skill, whose description matches the same words. Never triggered by merely opening a PR. Declare its mode before polling. The playbook's step 1 owns the request-to-mode mapping. Reaching for `drive` inside a phase agent stops that agent finishing its turn.
 - Asked to land or ship a green stack → the **Shipping** playbook (`skill://poteto-mode/playbooks/shipping.md`). Green is not safe. Nothing gets armed before an independent per-PR verdict, and only the contiguous verified run from the root lands.
 - Bugbot or the agentic security review commented → skeptical posture. They catch real bugs and also file non-issues and nitpicks, so assess each on its merits and dismiss noise with a concrete reason instead of churning code. Triage fix / dismiss / ask per `skill://poteto-mode/references/bugbot-triage.md`.
 - Broken skill mid-task → fix it in its own PR. Don't block. Don't silently work around it.
-- Long, autonomous, or multi-phase work, or any task the user steps away from to review later ("going to bed", "trust it when i'm back", "run until X") → a decision trail via the **show-me-your-work** skill. Commit it when stakes need an auditable record; keep it local otherwise.
+- Long, autonomous, or multi-phase work, or any task the user steps away from to review later ("going to bed", "trust it when i'm back", "continue until X") → a decision trail via the **show-me-your-work** skill. Commit it when stakes need an auditable record. Keep it local otherwise.
 
 ## Principles
 
@@ -71,7 +70,7 @@ Read the leaf skill in full for any principle you apply. Each entry names when i
 
 **Delegation**
 
-- **Guard the Context Window.** Context fills up: large outputs, long files, repeated reads, fan-out planning. Route bulk to delegated sessions, keep summaries in the main thread.
+- **Guard the Context Window.** Context fills up: large outputs, long files, repeated reads, fan-out planning. Route bulk to subagents, keep summaries in the main thread.
 - **Never Block on the Human.** Tempted to ask "should I do X?" on reversible work. Proceed, present the result, let the human course-correct.
 
 **Meta**
@@ -92,7 +91,7 @@ Read the leaf skill in full for any principle you apply. Each entry names when i
 
 `poteto-mode` is the sole router. It selects the playbook, step order, canonical role, and lifecycle protocol. The `pstack-omp` adapter translates host mechanics. Never copy a backend's command syntax into a routed skill.
 
-The chat that receives `/poteto-mode` runs the playbook. Delegate steps inside it, never the playbook itself. Routed workflow skills (`how`, `why`, `interrogate`, `reflect`, `swarm`) set their own roles and lifecycle protocol for diverse review. Respect what the skill prescribes.
+**Use a canonical role for any subagent you spawn inside a playbook step** (code-writing delegates, ad-hoc helpers). The root session that receives `/poteto-mode` runs the playbook. Never start a child, `poteto-agent` included, to run the playbook itself. Routed workflow skills (`how`, `why`, `interrogate`, `reflect`, `swarm`) set their own canonical roles for diverse-model review. Respect what the skill prescribes, don't override its roles.
 
 Use these canonical roles:
 
@@ -109,20 +108,22 @@ Use these canonical roles:
 | `owner` | Coupled multi-step implementation that benefits from retained session context. |
 | `watcher` | One exact generation or external-state transition, then terminate. |
 
-You own every delegated session's work. Review the diff and write your own summary, don't pass through what it said.
+Use only these canonical lifecycle protocols: **Bounded session**, **Panel**, **Long-lived owner**, and **One-shot watcher**. Their mechanics live in the active adapter. A child never starts another child; it returns proposed briefs to the root.
 
-Use only these canonical lifecycle protocols: **Bounded session**, **Panel**, **Long-lived owner**, and **One-shot watcher**. Their mechanics live in the active adapter. Start every Panel participant before waiting for any result. Keep implementers, reviewers, judges, and synthesizers separate. A child never starts another child; it returns proposed briefs to the root.
+**Defaults for every child.** Background runs (a steer or resume of a running agent too, because a foreground call holds your turn while other reports wait), file pointers not inlined context, model per role from its line in `$PSTACK_CONFIG` (or `.pstack/config.md`), never a `model` field on the task (configurable via `/setup-pstack`. Defaults come from OMP's model settings). Code delegates tier by difficulty. The hardest changes (cross-cutting design, gnarly concurrency, subtle algorithms) go to your strongest judgment model (the `hardest tasks` line), whether the task needs judgment on vague intent or is a precisely specified sequence of steps to execute to the letter. Trivial mechanical edits go to the `mechanical` role. Per-role lines in `$PSTACK_CONFIG` (or `.pstack/config.md`) override these defaults and the model choices in the routed skills (`how`, `why`, `arena`, `swarm`, `architect`, `interrogate`, `reflect`). A role with no line keeps its default, and a role line of `inherit-parent` or `auto` runs that role on the parent chat model. Each code playbook's configured model comes from its line (`feature, refactoring`, `bug-fix`, `perf-issue`, or `hillclimb`), and the hardest changes read `hardest tasks`. Prose and judgment read `judgment and prose`.
 
-Pass concise file pointers and explicit worktree or output paths. Review every artifact and run parent verification. Use a fresh session when the unit or role changes. Agreement across independent sessions is useful evidence, not proof. Model selection belongs to the active runtime's role configuration, not the routed skill. When `$PSTACK_CONFIG` (or `.pstack/config.md`) sets them, each code playbook reads its own line (`feature, refactoring`, `bug-fix`, `perf-issue`, or `hillclimb`), the hardest changes read `hardest tasks`, and prose and judgment read `judgment and prose`.
+**Match the effort to the job.** Before each start, begin from the role's line in `$PSTACK_CONFIG` (or `.pstack/config.md`), or the OMP default when the role has no line, and pick the reasoning level the job needs. The `# budget` line that `/setup-pstack` writes sets each role's starting level, `xhigh` by default. Raise it one step, up to `max`, for the hardest or subtlest work. Lower it one step for judgment and two or more steps for routine work. Apply the level through the host task runner's effort setting when the host exposes it. Otherwise the role's configured level stands. Verification is the exception and stays on the `swarm workers` line at its configured level. Change only the effort level and keep the model the role names, so a diverse panel stays diverse. If that model has no setting at the chosen level, use its nearest one. A role on `auto` or `inherit-parent` stays on the parent model. If the host task runner rejects the adjusted level, do not try another one. Use the role's configured level and say so. If the host task runner rejects that too, continue with the calling skill's fallback. A choice counts as rejected once a task error says it is not valid, or leaves it out of its list of valid choices. Never pass a rejected choice, and skip any fallback the host already rejected. When the calling skill has no fallback, use the closest valid choice for the role from the error's list, or omit the effort setting so the child runs at the host's default when the list has none. When the calling skill's fallback runs out without saying what to do next, omit the effort setting too. Say so in both cases.
 
-**Fresh sessions by default.** Give new work to a fresh session with consolidated scope, meaning the original brief, every later directive, and the prior session's report and branch. This holds for a fix round, a follow-up, a retry, and the next queue item. Send a follow-up to an existing session only when the new work strictly needs state that lives in that session and is costly to move: its local checkout, its uncommitted changes, or a process it still runs, such as a dev server, a simulator, or a babysit watcher. A stop or hold order to a running session is not reuse. A role such as a PR owner outlives its session. Once that session returns, a fresh session takes the role's next round. Interrupt-chained resumes silently drop directives, so start a fresh session with consolidated scope rather than trusting a "done" summary. A second opinion is the same brief against a different model. Agreement is high-signal.
+You own every subagent's work. Review the diff and write your own summary, don't pass through what it said. A second opinion is the same prompt against a different model. Agreement is high-signal.
+
+**Fresh subagents by default.** Give new work to a fresh subagent with consolidated scope, meaning the original brief, every later directive, and the prior agent's report and branch. This holds for a fix round, a follow-up, a retry, and the next queue item. Resume, message, or queue a follow-up on an existing subagent only when the new work strictly needs state that lives in that agent and is costly to move: its local checkout, its uncommitted changes, or a process it still runs, such as a dev server, a simulator, or a babysit watcher. A stop or hold order to a running agent is not reuse. A role such as a PR owner outlives its agent. Once that agent returns, a fresh agent takes the role's next round. Interrupt-chained resumes silently drop directives, so fire a fresh subagent with consolidated scope rather than trusting a "done" summary.
 
 ## Writing the reply
 
-Write the reply clean as you draft it. The cleanup-afterward pass has been measured to fail, so never generate the bad sentence in the first place.
+Write the reply clean as you draft it. A cleanup pass after drafting does not remove these patterns.
 
 - **Short declarative sentences.** One thought per sentence, ended with a period.
-- **The long-dash character is banned outright.** Two cases. A file-list bullet joining a filename to its description with a dash. Write it as a sentence ("`main.js` owns persistence and the IPC handlers"). A bold section header joined to its text by a dash. Write the header as its own sentence ("**Verification.** End to end via CDP").
+- **No long-dash character anywhere.** Write a file-list bullet as a sentence ("`main.js` owns persistence and the IPC handlers") and a bold section header as its own sentence ("**Verification.** End to end via CDP").
 - **A colon as a mid-sentence connector is also out** (unslop rule 14). A colon before a list is fine.
 - **Terse is not an excuse to drop content.** Short sentences, but every section the playbook's reply names stays: details, tradeoffs, choices, open decisions.
 - **Frame impact for the consumer and the maintainer.** Name who the work is for (an end user, a colleague importing the library) and what changes for them before any implementation detail. Then what the next engineer who owns this code inherits. If you can't say what either would notice, the work or the explanation is off.
@@ -133,13 +134,15 @@ Every playbook ends with a reply written this way, PR link as `https://github.co
 
 ## Comments
 
-Comments follow the same rule as the reply. Write them clean as you go; a flat "no narrating comments" ban doesn't catch them, you have to not write them in the first place. The case we keep catching is a verify or test script that narrates its phases, a `// Phase 1: add cards` line above the block. Delete it; the assertion or log string is the only doc you need. Write `assert(ok, 'persisted across restart')`, not a `// move the card` comment plus the code. This applies to every file you produce, including the delegate's diff and the verify script. Keep a comment only for a non-obvious *why* the code can't show.
+Comments follow the same rule as the reply. Write them clean as you go. Keep a comment only for a non-obvious *why* the code can't show. A verify or test script gets no phase-narrating comments such as `// Phase 1: add cards`. The assertion or log string documents the step, as in `assert(ok, 'persisted across restart')`. This applies to every file you produce, including the delegate's diff.
 
 ## Playbooks
 
-Open a plan whose first items are the matched playbook's steps, copied in verbatim, before any task-specific items. A step you choose not to do stays in the plan with a one-line `skip: <reason>`; skipping silently is not allowed. Match the task to a playbook below and open its full steps at `skill://poteto-mode/playbooks/<title>.md`, with the title in kebab case, hyphens kept and other punctuation dropped, unless the entry gives its file. Copy its steps in verbatim.
+Open a todolist whose first items are the matched playbook's steps, copied in verbatim, before any task-specific todos. A step you choose not to do stays in the list with a one-line `skip: <reason>`. Match the task to a playbook below and open its full steps at `skill://poteto-mode/playbooks/<title>.md`, with the title in kebab case, hyphens kept and other punctuation dropped, unless the entry gives its file. Copy its steps in verbatim.
 
-A large or cross-cutting effort (a migration across many call sites, an ambitious multi-part change), or work the user steps away from to trust later, routes to the **figure-it-out** skill even when a narrower playbook like Feature fits. Use **figure-it-out** whenever no bundled playbook fits. It designs a bespoke, rigorous playbook for the task. A standing project-scale program (multi-day, many stacked PRs, a fleet of delegated sessions under one coordinator) routes to **Orchestrate** instead. figure-it-out designs one bespoke run, orchestrate runs the program.
+Playbook scripts live under `scripts/` in this skill's directory, the absolute path the host shows as `[Skill directory: …]` when the skill loads. Playbooks write that path as `<skill-dir>`.
+
+A large or cross-cutting effort (a migration across many call sites, an ambitious multi-part change), or work the user steps away from to trust later, routes to the **figure-it-out** skill even when a narrower playbook like Feature fits. Use **figure-it-out** whenever no bundled playbook fits. It designs a bespoke, rigorous playbook for the task. A standing project-scale program (multi-day, many stacked PRs, a fleet of subagents under one coordinator) routes to **Orchestrate** instead. figure-it-out designs one bespoke run, orchestrate runs the program.
 
 - **Investigation.** Read-only question: how does X work, why was Y built this way, are we sure about Z, should we do X or Y.
 - **Bug fix.** A reported defect to reproduce, root-cause, and fix with runtime evidence.
@@ -154,12 +157,12 @@ A large or cross-cutting effort (a migration across many call sites, an ambitiou
 - **Authoring or modifying a skill.** Writing or editing a SKILL.md. File: `skill://poteto-mode/playbooks/authoring-a-skill.md`.
 - **Eval.** Testing how a skill, structure, or prompt change affects agent behavior before promoting it.
 - **Babysit.** Driving a PR or a stack to merge-ready: conflicts, review threads, CI.
-- **Shipping.** The half after Babysit. Independently verifying a green stack, then landing the contiguous verified run from the root.
+- **Shipping.** The half after Babysit. Independently verifying a green stack, then landing the contiguous verified run bottom-up through `gh` by default or Origin when its CLI is available.
 - **Autonomous run.** A long task to drive to completion without stopping ("run until done", "continue until X").
-- **Orchestrate.** A standing project handed to one coordinator chat: multi-day, many stacked PRs, dozens to hundreds of delegated sessions, minimal human turns ("run this whole project", "own this migration until it lands"). Distinct from Autonomous run, which drives one task to a predicate. Work one agent could finish inside the session's budget routes there, not here, however program-shaped the phrasing sounds.
-- **Autopilot-full.** A queue of independent PRs run to merged with full autonomy. One owner per PR carries build through merge, and the root swarm-verifies each PR before its owner merges ("autopilot this queue", "full autopilot", one-owner-per-PR programs).
+- **Orchestrate.** A standing project handed to one coordinator chat: multi-day, many stacked PRs, dozens to hundreds of subagents, minimal human turns ("run this whole project", "own this migration until it lands"). Distinct from Autonomous run, which drives one task to a predicate. Work one agent could finish inside the session's budget routes there, not here, however program-shaped the phrasing sounds.
+- **Autopilot-full.** A queue of independent PRs run to merged with full autonomy. One owner per PR carries build through merge-ready, and the root swarm-verifies and merges each PR ("autopilot this queue", "full autopilot", one-owner-per-PR programs).
 - **Autopilot-stack.** Autopilot-full without the merge. A queue of PRs built and verified with full autonomy, then handed to the operator to land. A PR stacks only on a PR it builds on ("autopilot-stack", "autopilot, don't merge", "stack them, don't ship", "build the stack, I'll land it").
-- **Session pickup.** Resuming or taking over prior in-flight work from a known session ID, durable transcript or export, decision trail, or pushed branch.
+- **Session pickup.** Resuming or taking over a prior agent's in-flight work from a transcript or pushed branch.
 - **Pause safely.** Suspending in-flight work cleanly so it can be resumed, on an explicit pause, going offline, a host restart, or imminent context compaction. The complement to Session pickup.
 - **Multi-phase or multi-PR plan.** Work that spans phases or stacked PRs. File: `skill://poteto-mode/playbooks/multi-phase-plan.md`.
 - **Worktree and simulator cleanup.** Reclaiming local disk by pruning merged or abandoned git worktrees and stale iOS simulators ("what's using my disk", "clean up worktrees", "prune safe-to-prune worktrees", "free up space", "delete old simulators"). File: `skill://poteto-mode/playbooks/worktree-cleanup.md`.

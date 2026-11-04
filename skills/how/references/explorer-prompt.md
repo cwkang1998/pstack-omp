@@ -14,7 +14,6 @@ Other explorers are investigating different slices of the same subsystem in para
 
 {EXPLORATION_ANGLE}
 
-
 ## Output
 
 ### Components Found

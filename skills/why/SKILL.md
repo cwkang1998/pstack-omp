@@ -8,11 +8,11 @@ disable-model-invocation: true
 
 Follow the [portable runtime contract](../pstack-omp/references/runtime.md) for tool discovery, researcher and synthesizer roles, model choices, concurrency, and unavailable-capability reporting.
 
-Investigate the motivation and intent behind code. The companion **how** skill answers what the code does and how it works. **why** answers what forces led to its shape.
+Investigate the motivation and intent behind code. The companion `how` skill answers what the code does and how it works. `why` answers what forces led to its shape.
 
-Each launch below names a line in the portable pstack configuration (`$PSTACK_CONFIG`, else `.pstack/config.md`) and a default role. Use that line's value, or the default role if the configuration or the line is missing. An `auto` or `inherit-parent` value runs the child on the parent chat model, with no explicit model choice. If the host task runner rejects a configured choice, use the default role and say so. If it rejects the default, use the closest live role the host exposes.
+Each spawn below names a role line in `$PSTACK_CONFIG (or .pstack/config.md)` and a default role. Spawn it in that role. OMP applies the line's value through its model settings, never a `model` field on the task, and runs the role's default model if the configuration or the line is missing. An `auto` or `inherit-parent` value means the parent model. If the host task runner rejects a slug, use the default and say so. If it rejects the default, use the closest valid agent for that role from its error message. Set each child's reasoning effort for the job through the task runner's effort setting when the host exposes it, per the Delegation section of the **poteto-mode** skill.
 
-Every child keeps access to the external tools it needs. Investigators need them for their sources, and the synthesizer needs them for citation spot-checks. Forbid writes in every standalone brief. If the host cannot combine a read-only posture with external-tool access, preserve tool access and enforce no writes in the brief.
+Every spawn keeps MCP access. **Do not use a read-only mode that strips it.** That disables the MCP-backed investigators and the synthesizer's citation spot-checks. Investigators still shouldn't write anything.
 
 ## Operating Posture
 
@@ -22,7 +22,7 @@ Operate as a **careful, cautious, and precise investigator**. Be honest about wh
 
 The **target** is usually a chunk of code, a pattern, a feature, or a named design decision. The **question** is usually a design rationale, a tradeoff, a motivating edge case, an external constraint, dead code, or a broad history sweep.
 
-If the target is vague ("why do we do it this way?" with no clear referent), make your best guess from conversation context (open files, recent edits, active selection when exposed, and what was just discussed). State your interpretation briefly so the user can redirect if you're off, then proceed.
+If the target is vague ("why do we do it this way?" with no clear referent), make your best guess from conversation context (open files, recent edits, cursor location, what was just discussed). State your interpretation briefly so the user can redirect if you're off, then proceed.
 
 ## Step 2. Establish the Code Anchor
 
@@ -34,7 +34,7 @@ Before spawning investigators, build the seed context inline: file paths and lin
 
 ### Discovery
 
-Before launching investigators, inspect the external tools, MCP servers, resources, and CLIs exposed by the current host. The live host inventory is authoritative; do not infer a vendor-specific directory or claim a source is searchable when no matching capability is exposed.
+Before spawning investigators, list the available MCPs from the OMP environment, using the session's tool list and any MCP server instructions.
 
 Map each available MCP to one evidence category:
 
@@ -48,7 +48,7 @@ Map each available MCP to one evidence category:
 
 Source control is always available through git and `gh`. For the other six, classify using the MCP name, server instructions, tool names, and resource descriptors. If an MCP could fit more than one category, choose the one matching its primary evidence. Record ambiguous cases in the coverage map.
 
-Launch one investigator per category that has a matching MCP, all concurrently, each owning exactly one tool or MCP. Don't ask one agent to cover multiple MCPs. Use the configured `why investigators` choice when present, otherwise the canonical `researcher` role.
+Spawn one investigator per category that has a matching MCP, all in a single message so they run concurrently, each owning exactly one tool or MCP. Don't ask one agent to cover multiple MCPs. Role line: the `why investigators` line, default role `researcher`.
 
 Each investigator's prompt is `references/investigator-prompt.md` filled in, plus:
 - the category playbook `references/sources/<source>.md` for the selected MCP, adapted from the examples in `references/source-playbook.md`
@@ -78,7 +78,7 @@ If your scope assessment suggests a single-commit trivial target where the PR de
 
 ## Step 4. Synthesize
 
-Launch one synthesizer, using the configured `why synthesizer` choice when present, otherwise the canonical `synthesizer` role. It gets:
+Spawn one synthesizer. Role line: the `why synthesizer` line, default role `synthesizer`. It gets:
 1. The investigator findings, including any null results and any categories skipped with justification
 2. The code anchor
 3. The user's original question

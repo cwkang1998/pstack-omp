@@ -10,7 +10,7 @@ Follow the [portable runtime contract](../pstack-omp/references/runtime.md) for 
 
 ## Start
 
-Track one checklist entry per phase before launching anything. Use the host's planning facility when available; otherwise keep a compact checklist in the conversation or project-local decision trail.
+Open a todolist with one entry per phase before launching anything.
 
 1. Frame
 2. Fan out
@@ -21,12 +21,14 @@ Track one checklist entry per phase before launching anything. Use the host's pl
 
 1. State the done predicate and the artifact or report the swarm must return.
 2. Choose the shape. Partition into slices, race N workers on identical briefs, or mix both. For a race or mixed shape, declare `first pass`, `rank all`, or `best-of` before spawning.
-3. Pick the worker choice from the `swarm workers` line in `$PSTACK_CONFIG` or `.pstack/config.md`. If the configuration or that line is missing, use the canonical `implementer` role. For `auto` or `inherit-parent`, leave the model unset so the workers run on the parent model. If the host task runner rejects a role or model choice, use the default and say so. If it rejects the default, use the closest valid choice of the same kind from its error message. For a model race, name each arm's role or model choice up front.
-4. Give each worker its own writable output when it writes. Use a worktree, branch, or `/tmp/swarm-<slug>/worker-<n>/`. When workers verify or measure commits, each brief names the exact SHAs. A measurement brief also names the method (sample count, what one sample is, order). The worker records both in its result.
+3. Pick the worker model from the `swarm workers` line in `$PSTACK_CONFIG (or .pstack/config.md)`. If the configuration or that line is missing, use the canonical `implementer` role. For `auto` or `inherit-parent`, the workers run on the parent model. If the host task runner rejects a slug, use the default and say so. If it rejects the default, use the closest valid agent for that role from its error message. For a model race, name each arm's model up front. Set each child's reasoning effort for the job through the task runner's effort setting when the host exposes it, per the Delegation section of the **poteto-mode** skill.
+4. Give each worker its own writable output when it writes. When workers verify or measure commits, each brief names the exact SHAs. A measurement brief also names the method (sample count, what one sample is, order). The worker records both in its result.
 
 ## Phase B: Fan out
 
-Launch all N workers in one batch through the host's task facility, using the step 3 choice, left unset for `auto` or `inherit-parent`. Use the environment the current host actually provides; do not assume remote execution, uploaded repositories, or access to the user's machine. If workers need a non-default branch or checkout, name it in each standalone brief and verify that the host can access it before launch.
+Spawn all N workers in one message in the canonical `implementer` role. For a model race, route each arm through an agent whose configured model differs, per the Model routing section of the **pstack-omp** skill, check each returned model identity, and report a capability gap when routing cannot realize the race. Set `isolated: true` when the task runner exposes `isolated`. Otherwise give each writer its own worktree or output path, or report that isolation is unavailable. Use `isolated: false` only when the worker needs access to something in the user's live checkout.
+
+When a worker must start from a non-default pushed branch, name that branch in its brief.
 
 Every brief stands alone. Include the goal, scope, exact slice or race arm, how to verify, and what to report. Reports use `PASS`, `ISSUES`, or `BLOCKED` with evidence. A worker that can prove a defect reports `ISSUES` and lists every issue it can prove, not only the first.
 

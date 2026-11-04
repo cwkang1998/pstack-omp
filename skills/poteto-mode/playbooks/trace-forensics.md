@@ -1,10 +1,10 @@
 ### Trace forensics
 
-**You own the diagnosis from the artifact.** For a dropped `.cpuprofile`, `Trace-*.json.gz`, `Spindump.txt`, or `.heapsnapshot` paired with "why is this slow / unresponsive / leaking / crashing".
+**You own the diagnosis from the artifact.**
 
 Distinct from **Runtime forensics**, which instruments the live process. Here the capture already exists. The artifact is a fixed dataset, read it, don't re-run it. Keep tooling generic: a DevTools or trace parser for cpuprofile and `.json.gz`, a text editor for a spindump, your heap tooling for a heapsnapshot.
 
-1. Identify the format and load it with the right tool. The root parses large artifacts through one canonical `explorer` using the active adapter's **Bounded session** protocol and a fixed artifact and output contract. Keep only the reduced finding in the main thread (the **principle-guard-the-context-window** skill).
+1. Identify the format and load it with the right tool. Parse large artifacts in a canonical `explorer` subagent through the active adapter's **Bounded session** protocol (the **principle-guard-the-context-window** skill) and keep the reduced finding in the main thread. Set each child's reasoning effort for the job through the task runner's effort setting when the host exposes it, per the Delegation section.
 2. Transform the raw artifact into a form you can query. Dump the trace or heap snapshot into sqlite, one row per sample, frame, or node. Reach the queryable shape before you read.
 3. Narrow to the cause. Query for the frames that hold the most time and walk the call tree to the hot path. For a leak, follow the retainer chain from the leaked object to a GC root. For a spindump, find the thread stuck on-CPU or blocked and its wait reason.
 4. Attribute to source. Map the hot frame to file, symbol, and line via the artifact's own symbols. A frame with no source mapping is not yet a diagnosis. Resolve the symbols, or say plainly the artifact does not carry them.
