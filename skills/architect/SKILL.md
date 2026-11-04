@@ -12,7 +12,7 @@ Sketch types, function signatures, class shapes, and module boundaries with `not
 
 ## Start
 
-Track one checklist entry per phase before starting. Use the host's planning facility when available; otherwise keep a compact checklist in the conversation or project-local decision trail. Autonomous mode without checkpoints needs the list to show phase position and keep phases from silently disappearing.
+Open a todolist with one entry per phase before starting.
 
 1. Ground
 2. Sketch
@@ -30,7 +30,7 @@ Skip Phase A only when the work is genuinely greenfield with no surrounding syst
 
 Run the **arena** skill with the design-sketch task and the Phase A grounding artifacts. Pass `references/runner-prompt.md` as each runner's prompt.
 
-Use the configured `architect runners` panel, in place of the `arena runners` panel. If it is absent, use a diverse host-supported panel drawn from `designer`, `planner`, `reviewer`, and `inherit-parent`; the live host inventory wins. Alias and rejected entries follow the runner rules in the **arena** skill's Phase A.
+Take the runners from the `architect runners` line in `$PSTACK_CONFIG (or .pstack/config.md)`, in place of the `arena runners` line. If the configuration or that line is missing, use the canonical `planner` and `implementer` roles. Alias and rejected entries follow the runner rules in the **arena** skill's Phase A.
 
 Design it twice. Require at least two structurally distinct candidates before synthesis, even when the first looks sufficient. This is the **exhaust-the-design-space** principle skill made concrete. Whole-shape alternatives, not point fixes inside one shape.
 

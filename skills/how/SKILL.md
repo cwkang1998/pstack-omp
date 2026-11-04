@@ -10,7 +10,7 @@ Follow the [portable runtime contract](../pstack-omp/references/runtime.md) for 
 
 Explore the codebase to answer "how does X work?" questions. Produce architectural explanations at the level of a senior engineer onboarding onto a subsystem, enough to build a working mental model, not so much that it reads like annotated source code.
 
-Every child is read-only. Explorers use the `how explorer` line in the portable pstack configuration (`$PSTACK_CONFIG`, else `.pstack/config.md`), default role `explorer`. Every explainer uses the `how explainer` line, default role `synthesizer`. Use that line's value, or the default role if the configuration or the line is missing. An `auto` or `inherit-parent` value runs the child on the parent chat model, with no explicit model choice. If the host task runner rejects a configured choice, use the default role and say so. If it rejects the default, use the closest live role the host exposes.
+Every spawn is a read-only host task runner subagent. Explorers use the `how explorer` line in `$PSTACK_CONFIG (or .pstack/config.md)` (default role `explorer`), and every explainer uses the `how explainer` line (default role `synthesizer`). Spawn each in its default role. OMP applies the line's value through its model settings, never a `model` field on the task, and runs the role's default model if the configuration or the line is missing. An `auto` or `inherit-parent` value means the parent model. If the host task runner rejects a slug, use the default and say so. If it rejects the default, use the closest valid agent for that role from its error message. Set each child's reasoning effort for the job through the task runner's effort setting when the host exposes it, per the Delegation section of the **poteto-mode** skill.
 
 ## 1. Assess complexity
 
@@ -23,7 +23,7 @@ When in doubt, take the simple path.
 
 ## 2. Explore (complex only)
 
-Decompose the question into 2 to 4 angles, each a distinct slice of the subsystem. Launch all explorers concurrently through the host's task facility, each with a standalone brief built from `references/explorer-prompt.md` and its angle filled in.
+Decompose the question into 2 to 4 angles, each a distinct slice of the subsystem. Spawn all explorers in a single message, each with `references/explorer-prompt.md` and its angle filled in.
 
 ## 3. Synthesize (complex only)
 

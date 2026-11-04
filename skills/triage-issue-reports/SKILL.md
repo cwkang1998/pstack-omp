@@ -63,14 +63,14 @@ Inspect every relevant attachment.
 - Read screenshots at full useful resolution.
 - Review video for the state transition that separates correct and broken behavior.
 - Read logs, traces, and crash text for concrete signatures.
-- If media needs specialist review, use a read-only canonical `reviewer` child with a standalone narrow brief. The child returns findings only. If the host lacks child execution, perform the same bounded review locally and do not claim independent review.
+- If media needs specialist review, use a read-only media worker and ask a narrow question. The worker returns findings only.
 - If an attachment cannot be read, say so in the verdict. Do not invent what it shows.
 
 Use evidence already in the thread before asking the reporter for more.
 
 ## 3. Trace cause before routing
 
-Do a bounded source and history pass before choosing an owner or destination. Invoke the sibling **how** skill to trace the path from the reported action to the observed result. Invoke **why** when the report looks like a regression or touches defensive code.
+Do a bounded source and history pass before choosing an owner or destination. Use pstack's `how` skill to trace the path from the reported action to the observed result. Use `why` when the report looks like a regression or touches defensive code.
 
 1. Identify the likely code path from the reported action to the observed result.
 2. Check whether the visible symptom belongs to that code path or a dependency below it.
@@ -231,7 +231,7 @@ If this run created a tracker issue and the verdict did not land, use the adapte
 
 ## 10. Watch one follow-up window
 
-Watch the source thread for the configured follow-up window through the host's watcher or durable-loop facility, then stop. If neither exists, preserve the exact predicate and checkpoint using the runtime contract's local fallback.
+Watch the source thread for the configured follow-up window, then stop.
 
 - Answer only a direct question to the triage identity.
 - Apply a concrete correction to the tracker issue when safe.

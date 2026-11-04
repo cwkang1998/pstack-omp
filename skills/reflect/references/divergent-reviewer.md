@@ -18,7 +18,7 @@ Scan for:
 
 ## Scope to skills and tools the session actually used
 
-Route findings only to skills, tools, or MCPs this transcript used. A skill counts as used when the transcript shows a host file read of its `SKILL.md` (in a host-supported skill root, within this package `skills/<name>/SKILL.md`), a child brief naming its path, or a host shell, search, or external-tool call matching its documented commands. Speculative routings to skills the parent never opened do not count.
+Route findings only to skills, tools, or MCPs this transcript used. A skill counts as used when the transcript shows a `read` of its `SKILL.md` (under `.omp/skills/`, `~/.omp/agent/skills/`, or `~/.omp/plugins/`) or of `skill://<name>`, a `task` prompt naming its path, or a tool call (Bash, Grep, MCP, etc.) matching its documented commands. Speculative routings to skills the parent never opened do not count.
 
 Two finding shapes are valid:
 - The parent invoked the skill and you found a real gap in its body. Route to the skill's relevant section.

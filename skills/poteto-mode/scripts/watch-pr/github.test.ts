@@ -230,7 +230,7 @@ describe("closed enum parsing", () => {
   });
 });
 
-it("annotates automated review threads with distinct pass counts", () => {
+it("annotates Bugbot threads with distinct review-pass counts", () => {
   const response = {
     data: {
       repository: {
@@ -259,11 +259,11 @@ it("annotates automated review threads with distinct pass counts", () => {
                 comments: {
                   nodes: [
                     {
-                      body: "AUTOMATION_ID: run-2 severity high",
+                      body: "CURSOR_AUTOMATION_ID: run-2 severity high",
                       createdAt: "now",
                       path: null,
                       line: null,
-                      author: { login: "review-automation" },
+                      author: { login: "cursor" },
                     },
                   ],
                 },
@@ -291,8 +291,8 @@ it("annotates automated review threads with distinct pass counts", () => {
   };
   const threads = buildReviewThreads(parseReviewThreadPage(response).threads);
   expect(threads).toHaveLength(2);
-  expect(threads.map((thread) => thread.isAutomatedReview)).toEqual([true, true]);
-  expect(threads.map((thread) => thread.reviewPasses)).toEqual([3, 3]);
+  expect(threads.map((thread) => thread.isBugbot)).toEqual([true, true]);
+  expect(threads.map((thread) => thread.bugbotReviewPasses)).toEqual([3, 3]);
 });
 
 describe("review thread pagination", () => {
@@ -363,7 +363,7 @@ describe("review thread pagination", () => {
       ],
     });
     const threads = await resolveReviewThreads(reader, context);
-    expect(threads.map((item) => item.reviewPasses)).toEqual([2, 2]);
+    expect(threads.map((item) => item.bugbotReviewPasses)).toEqual([2, 2]);
   });
 
   it("drops resolved threads from later pages too", async () => {

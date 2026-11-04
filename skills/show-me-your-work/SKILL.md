@@ -56,7 +56,7 @@ Commit it only when the work is ambitious enough that a reviewer needs the trail
 
 ## Audit the log against the transcript
 
-At the end of the run, before handing back, check the log told the truth. Use the host's active transcript resource, an explicit transcript directory, or `$PSTACK_TRANSCRIPTS_DIR`. Never scan another workspace or a global vendor transcript tree. If no transcript is available, record that limit and audit against the available decision trail and artifacts without claiming transcript coverage. Walk this run's rows against what actually happened. Each stretch of them begins at one of this run's `start` rows, or at the first row if this run created the log, and ends at the next `start` row of another run:
+At the end of the run, before handing back, check the log told the truth. Read this run's transcript through the active workspace's host history resources (`history://`) or `$PSTACK_TRANSCRIPTS_DIR`. Don't scan another workspace or a global transcript tree. That reads unrelated private chats. Walk this run's rows against what actually happened. Each stretch of them begins at one of this run's `start` rows, or at the first row if this run created the log, and ends at the next `start` row of another run:
 
 - Check that every row maps to a real decision or action.
 - Check that each row's evidence resolves and shows what the row claims.
@@ -66,7 +66,7 @@ Correct the log, not the story. The audit never edits or removes a row, even an 
 
 ## Cross-model review of the trail
 
-Before handing back, launch a `reviewer` subagent on a different model family from the one that did the work when the host exposes model identity. Otherwise use a distinct reviewer role or the nearest independent review facility the host provides. If no independent child facility exists, report that limit instead of claiming cross-model review. Self-review is not a substitute. The reviewer reads the audit trail and the run's transcript when available, then flags what the user should pay attention to. Not a redo of the work, a scan for what's suboptimal or risky.
+Before handing back, spawn a `reviewer` subagent on a different model family from the one that did the work. Self-review is not a substitute. The subagent reads the audit trail and the run's transcript, then flags what the user should pay attention to. Not a redo of the work, a scan for what's suboptimal or risky. Set each child's reasoning effort for the job through the task runner's effort setting when the host exposes it, per the Delegation section of the **poteto-mode** skill.
 
 - Decisions logged with weak or absent evidence.
 - Verification steps skipped or claimed without proof in the transcript.

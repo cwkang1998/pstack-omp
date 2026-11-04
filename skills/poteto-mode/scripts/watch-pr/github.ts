@@ -326,27 +326,27 @@ function parseComment(value: unknown): T.ReviewComment {
     createdAt: string(object.createdAt, "review comment.createdAt"),
   };
 }
-function isAutomatedReview(comment: T.ReviewComment | null): boolean {
+function isBugbot(comment: T.ReviewComment | null): boolean {
   if (comment === null) return false;
   const author = (comment.authorLogin ?? "").toLowerCase();
   const body = comment.body.toLowerCase();
-  const authorMarkers = ["bot", "automation", "reviewer"] as const;
-  const bodyMarkers = [
-    "bugbot",
-    "automation_id",
-    "agentic security review",
-    "pr review automation",
-  ] as const;
   return (
-    authorMarkers.some((marker) => author.includes(marker)) ||
-    bodyMarkers.some((marker) => body.includes(marker))
+    author.includes("bugbot") ||
+    (author === "cursor" &&
+      [
+        "bugbot",
+        "cursor_automation_id",
+        "agentic security review",
+        "description start",
+        "severity",
+      ].some((token) => body.includes(token)))
   );
 }
 function passKey(comment: T.ReviewComment | null): string | null {
   if (comment === null) return null;
   for (const pattern of [
     /RUN_ID:\s*([a-zA-Z0-9_.:-]+)/,
-    /AUTOMATION_ID:\s*([a-zA-Z0-9_.:-]+)/,
+    /CURSOR_AUTOMATION_ID:\s*([a-zA-Z0-9_.:-]+)/,
   ]) {
     const match = pattern.exec(comment.body);
     if (match?.[1]) return match[1];
@@ -389,7 +389,7 @@ export function buildReviewThreads(
   const keys = new Set<string>();
   let keyless = false;
   for (const thread of threads) {
-    if (!isAutomatedReview(thread.firstComment)) continue;
+    if (!isBugbot(thread.firstComment)) continue;
     const key = passKey(thread.firstComment);
     if (key === null) keyless = true;
     else keys.add(key);
@@ -400,8 +400,8 @@ export function buildReviewThreads(
     .map(({ id, firstComment }) => ({
       id,
       firstComment,
-      isAutomatedReview: isAutomatedReview(firstComment),
-      reviewPasses: passes,
+      isBugbot: isBugbot(firstComment),
+      bugbotReviewPasses: passes,
     }));
 }
 export function parsePullRequest(

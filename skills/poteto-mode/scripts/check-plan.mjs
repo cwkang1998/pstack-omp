@@ -4,7 +4,7 @@ import process from "node:process";
 
 const RULE =
 	"Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.";
-const LANES = /(?:parallel|multiple|ten) lanes?.* at the PR head/i;
+const LANES = /Ten lanes on `[^`<>]+` at the PR head/;
 const SUB_BLOCKS = [
 	"Depends on.",
 	"Files.",
@@ -17,7 +17,7 @@ const SUB_BLOCKS = [
 	"Merge.",
 ];
 const PROGRAM_H3 = ["Arm the program", "Spawn owners", "PR mechanics", "Verdict and merge", "Boot recipe"];
-const PROGRAM_MARKERS = ["git show origin/main:", "hourly", "status message"];
+const PROGRAM_MARKERS = ["git show origin/main:", "hourly audit tick", "status message"];
 const HOW_TO_READ_MARKERS = [
 	"One box is one unit of work",
 	"names the evidence",
@@ -155,7 +155,7 @@ for (const pr of prSections) {
 
 	const live = block("Verify, live.");
 	if (live) {
-		if (!LANES.test(live.rest)) fail(live.n, `${pr.title}: Verify, live lacks a host-neutral lane declaration`);
+		if (!LANES.test(live.rest)) fail(live.n, `${pr.title}: Verify, live lacks "Ten lanes on \`<swarm workers choice>\` at the PR head" with the choice filled in`);
 		const lanes = boxes(live.lines).map((b) => ({ ...b, m: b.text.match(/^Lane (\d+)\. /) }));
 		const numbers = lanes.filter((b) => b.m).map((b) => Number(b.m[1])).sort((a, b) => a - b);
 		if (numbers.join(",") !== "1,2,3,4,5,6,7,8,9,10") fail(live.n, `${pr.title}: lanes are [${numbers.join(",")}], expected 1 to 10`);

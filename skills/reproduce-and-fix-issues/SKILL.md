@@ -121,13 +121,13 @@ Use the configured plain Unicode status strings. Keep status text short:
 - Draft pull request opened
 - Fix did not land
 
-Prefer Slack actions exposed and configured by the current host. Use `BENNY_SLACK_BOT_TOKEN` only when the user configured it for a narrow missing capability such as editing this one status message. Never expose the token to a worker.
+Prefer configured host Slack actions. Use `BENNY_SLACK_BOT_TOKEN` only when the user configured it for a narrow missing capability such as editing this one status message. Never expose the token to a worker.
 
 If no operations channel is configured, keep detailed status in the automation run output. Do not substitute a source-channel root message.
 
 ## 5. Load and check the control adapter
 
-Read `references/control-adapter.md` and the completed map at `control.feature_map_path`, then invoke the skill named by `control.skill_name` through the host-supported skill syntax.
+Read `references/control-adapter.md` and the completed map at `control.feature_map_path`, then invoke the skill named by `control.skill_name`.
 
 Find the feature-map section that matches the reported user path. Read it before driving the app. If no section covers the feature, mark the run blocked instead of inventing a path or selector.
 
@@ -158,7 +158,7 @@ Collect:
 - Attachments and error signatures
 - Candidate code area
 
-Inspect screenshots and video. Use read-only parallel `explorer` or `reviewer` children for code history, test ideas, blast-radius mapping, and media review when useful. Each child gets a standalone narrow brief and the Slack-write prohibition. If the host lacks child execution, perform the same bounded checks locally without claiming delegated review.
+Inspect screenshots and video. Use read-only parallel workers for code history, test ideas, blast-radius mapping, and media review when useful. Each worker gets a narrow question and the Slack-write prohibition.
 
 Use pstack's `how` skill to trace the action through the repository. Use `why` for regression history and defensive code. Form competing cause hypotheses and identify evidence that would separate them.
 
@@ -193,7 +193,7 @@ For a successful repro:
 - Save a short note with the exact steps and observed state.
 - Keep artifacts in the configured temporary artifact directory.
 
-Have a read-only canonical `reviewer` child answer one question when the host supports it; otherwise perform and label a local media review: does the evidence visibly show the discriminating broken state?
+Have a read-only media reviewer answer one question: does the evidence visibly show the discriminating broken state?
 
 If the answer is no or uncertain, the repro is not confirmed. Capture better evidence or use `Could not reproduce`.
 
@@ -255,7 +255,7 @@ Read-only workers may:
 
 They do not edit, run external writes, post status, or own the fix.
 
-A tightly scoped code edit may be delegated to a canonical `implementer` child during this phase only when the host can prove that its tool isolation removes Slack credentials and every Slack write action from that worker. Its prompt must still carry the explicit Slack-write ban. The coordinator reviews the edit and runs or verifies the required tests. If tool isolation is uncertain, keep the edit in the coordinator.
+A tightly scoped code edit may be delegated during this phase only when tool isolation removes Slack credentials and every Slack write action from that worker. Its prompt must still carry the explicit Slack-write ban. The coordinator reviews the edit and runs or verifies the required tests. If tool isolation is uncertain, keep the edit in the coordinator.
 
 Confirm the mechanism with runtime evidence. Eliminate competing hypotheses before editing.
 
