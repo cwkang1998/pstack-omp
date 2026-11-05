@@ -17,6 +17,9 @@ scripts while replacing Cursor-only runtime assumptions with an OMP adapter.
 - `grill-me`, `grilling`, `grill-with-docs`, `domain-modeling`, and `wizard`
   from [mattpocock/skills](https://github.com/mattpocock/skills). This package
   pins them to one upstream commit. The daily upstream sync does not update them.
+  `poteto-mode` routes to `domain-modeling` and `wizard`, and reads the glossary in
+  `.pstack/docs/`, through `skills/pstack-omp/references/local-routes.md`. The
+  grill skills run only when you ask for them.
 - Native OMP package metadata.
 - Daily upstream synchronization that opens a verified pull request.
 
