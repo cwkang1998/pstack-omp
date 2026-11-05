@@ -9,35 +9,32 @@ Actively build and sharpen the project's domain model as you design. This is the
 
 ## File structure
 
+The domain model lives in `.pstack/docs/`, the directory where pstack writes its plans. Write glossary and ADR files only there. If the project also has a `GLOSSARY.md` or `docs/adr/` somewhere else, read it as prior context, but don't add to it.
+
 Most repos have a single context:
 
 ```
-/
+.pstack/docs/
 ├── GLOSSARY.md
-├── docs/
-│   └── adr/
-│       ├── 0001-event-sourced-orders.md
-│       └── 0002-postgres-for-write-model.md
-└── src/
+└── adr/
+    ├── 0001-event-sourced-orders.md
+    └── 0002-postgres-for-write-model.md
 ```
 
-If a `GLOSSARY-MAP.md` exists at the root, the repo has multiple contexts. The map points to where each one lives:
+If `.pstack/docs/GLOSSARY-MAP.md` exists, the repo has multiple contexts. The map points to where each one lives:
 
 ```
-/
+.pstack/docs/
 ├── GLOSSARY-MAP.md
-├── docs/
-│   └── adr/                          ← system-wide decisions
-├── src/
-│   ├── ordering/
-│   │   ├── GLOSSARY.md
-│   │   └── docs/adr/                 ← context-specific decisions
-│   └── billing/
-│       ├── GLOSSARY.md
-│       └── docs/adr/
+├── glossary/
+│   ├── ordering.md
+│   └── billing.md
+└── adr/                    ← system-wide decisions
+    ├── ordering/           ← context-specific decisions
+    └── billing/
 ```
 
-Create files lazily: only when you have something to write. If no `GLOSSARY.md` exists, create one when the first term is resolved. If no `docs/adr/` exists, create it when the first ADR is needed.
+Create files lazily: only when you have something to write. If no `.pstack/docs/GLOSSARY.md` exists, create one when the first term is resolved. If no `.pstack/docs/adr/` exists, create it when the first ADR is needed.
 
 ## During the session
 
