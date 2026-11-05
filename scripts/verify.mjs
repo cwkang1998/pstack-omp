@@ -60,6 +60,11 @@ const requiredSkills = new Set([
   "statechart",
   "create-formal-verification-skill",
   "maintain-formal-verification-skill",
+  "grill-me",
+  "grilling",
+  "grill-with-docs",
+  "domain-modeling",
+  "wizard",
 ]);
 
 const failures = [];

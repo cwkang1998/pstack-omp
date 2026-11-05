@@ -14,6 +14,9 @@ scripts while replacing Cursor-only runtime assumptions with an OMP adapter.
 - `poteto-mode` for routing work through the right playbook.
 - `pstack-omp` for translating roles, delegation, models, transcripts, questions,
   and long-running work to OMP.
+- `grill-me`, `grilling`, `grill-with-docs`, `domain-modeling`, and `wizard`
+  from [mattpocock/skills](https://github.com/mattpocock/skills). This package
+  pins them to one upstream commit. The daily upstream sync does not update them.
 - Native OMP package metadata.
 - Daily upstream synchronization that opens a verified pull request.
 
