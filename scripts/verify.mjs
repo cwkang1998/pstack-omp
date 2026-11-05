@@ -229,6 +229,18 @@ for (const agent of new Set([...(roster?.split("\n") ?? []), ...mappedAgents])) 
   }
 }
 
+const localRoutesUrl = "skill://pstack-omp/references/local-routes.md";
+const routerPath = join(skillsRoot, "poteto-mode", "SKILL.md");
+if (!(await readFile(routerPath, "utf8")).includes(localRoutesUrl)) {
+  failures.push(`${relative(root, routerPath)} no longer points to ${localRoutesUrl}`);
+}
+const localRoutesPath = join(skillsRoot, "pstack-omp", "references", "local-routes.md");
+for (const match of (await readFile(localRoutesPath, "utf8")).matchAll(/\*\*([a-z0-9-]+)\*\* skill/gu)) {
+  if (!skillDirs.includes(match[1])) {
+    failures.push(`${relative(root, localRoutesPath)} routes to missing skill ${match[1]}`);
+  }
+}
+
 const expectedSkillCount = requiredSkills.size;
 if (skillDirs.length < expectedSkillCount) {
   failures.push(`expected at least ${expectedSkillCount} skill directories, found ${skillDirs.length}`);
