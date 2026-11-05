@@ -95,7 +95,7 @@ const collect = async (directory) => {
 await collect(skillsRoot);
 
 for (const path of markdownFiles) {
-  const source = await readFile(path, "utf8");
+  const source = (await readFile(path, "utf8")).replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1[ \t]*$/gmu, "");
   for (const match of source.matchAll(/\]\(([^)#][^)]*)\)/gu)) {
     const target = match[1].split("#", 1)[0];
     if (target === "" || /^[a-z]+[0-9]*$/u.test(target)) continue;
