@@ -184,6 +184,49 @@ for (const [what, bin] of [
   });
 }
 
+const installedLauncher = () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "statechart-install-"));
+  const dir = path.join(root, "node_modules", "pkg");
+  fs.mkdirSync(dir, { recursive: true });
+  fs.copyFileSync(launcher, path.join(dir, "statechart"));
+  return path.join(dir, "statechart");
+};
+
+const withNode24 = (bin: string) => {
+  fs.writeFileSync(
+    path.join(bin, "node"),
+    '#!/bin/sh\n[ "$1" = --version ] && echo v24.0.0 && exit\necho node\n',
+    { mode: 0o755 },
+  );
+  return bin;
+};
+
+test("the launcher under node_modules runs statechart.ts on Bun 1.1.5 even when PATH has Node 24", () => {
+  const command = installedLauncher();
+  const r = run(path.join(corpus, "Login"), {
+    command: [command],
+    env: { PATH: withNode24(fakeBun("1.1.5")()) },
+  });
+  assert.equal(r.stderr, "");
+  assert.equal(r.status, 0);
+  assert.equal(r.stdout, `${path.join(path.dirname(command), "statechart.ts")}\n`);
+});
+
+test("the launcher whose real path is under node_modules stops with exit 127 when PATH has only Node 24", () => {
+  const link = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "statechart-link-")), "pkg");
+  fs.symlinkSync(path.dirname(installedLauncher()), link);
+  const r = run(path.join(corpus, "Login"), {
+    command: [path.join(link, "statechart")],
+    env: { PATH: withNode24(launcherTools()) },
+  });
+  assert.equal(r.status, 127);
+  assert.equal(
+    r.stderr,
+    "Node cannot run statechart.ts under node_modules, so statechart needs Bun 1.1.5 or later or Deno 2.0 or later.\n",
+  );
+  assert.deepEqual(r.files, []);
+});
+
 test("the order of TLC's dump and its state IDs do not change the chart or the report", () => {
   let seed = 7;
   const random = () => (seed = (seed * 48271) % 2147483647) / 2147483647;
