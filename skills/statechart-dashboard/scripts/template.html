@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="statechart-dashboard" content="{{hash}}">
+<title>{{title}}</title>
+<style>
+:root{color-scheme:light dark;--bg:#f5f6f8;--panel:#fff;--fg:#1b2430;--muted:#5d6879;--line:#dce2e9;--accent:#245dc1;--soft:#eaf1ff;--good:#136957;--goodbg:#e2f4ed;--bad:#bb263b;--badbg:#fff0f2;--warn:#865006;--warnbg:#fff3dc;--code:#f5f7fa;--shadow:0 2px 8px #17243a08}
+@media(prefers-color-scheme:dark){:root{--bg:#12161d;--panel:#1c222b;--fg:#e9eef6;--muted:#a4b0c1;--line:#333d4b;--accent:#8bb6ff;--soft:#243653;--good:#8edec3;--goodbg:#19382f;--bad:#ff9caa;--badbg:#40232b;--warn:#ecc785;--warnbg:#3d311e;--code:#151a22;--shadow:none}}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--fg)}
+button,input{font:inherit}
+button{cursor:pointer;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+#diagram [tabindex]:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+header{position:sticky;top:0;z-index:5;min-height:64px;padding:10px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--panel)}
+header strong{font-size:17px}
+header small{display:block;color:var(--muted);font-size:12px}
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr)}
+nav{position:sticky;top:64px;height:calc(100vh - 64px);overflow:auto;border-right:1px solid var(--line);padding:16px 10px;background:var(--panel)}
+nav input{width:100%;padding:8px 10px;border:1px solid var(--line);background:var(--bg);border-radius:6px;color:var(--fg);margin-bottom:10px}
+nav h2{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:12px 8px 3px;margin:0}
+nav button{display:flex;align-items:center;gap:7px;border:0;background:transparent;width:100%;text-align:left;padding:8px 9px;border-radius:6px;font-size:13px;margin:2px 0}
+nav button:hover{background:var(--bg)}
+nav button.active{background:var(--soft);color:var(--accent);font-weight:600}
+.dot{flex:none;width:8px;height:8px;border-radius:50%;background:var(--good)}
+.dot.bad{background:var(--bad)}.dot.warn{background:var(--warn)}.dot.neutral{background:var(--muted)}
+main{padding:24px;min-width:0;max-width:1900px}
+main:focus{outline:none}
+h1{font-size:26px;line-height:1.25;margin:0 0 9px;overflow-wrap:anywhere}
+h2{font-size:18px;margin:24px 0 10px}
+h3{font-size:15px;margin:0 0 6px;overflow-wrap:anywhere}
+p{margin:8px 0 12px}
+.lead{max-width:1050px;color:var(--muted);font-size:15px;white-space:pre-line}
+.banner{padding:12px 15px;border:1px solid var(--line);background:var(--panel);border-radius:8px;margin:14px 0;color:var(--muted);font-size:13px}
+.banner.warn{background:var(--warnbg);color:var(--warn);border-color:transparent}
+.panel{border:1px solid var(--line);border-radius:10px;background:var(--panel);box-shadow:var(--shadow);overflow:hidden}
+.panel-head{padding:10px 14px;border-bottom:1px solid var(--line);font-weight:600;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:4px 9px;font-size:12px}
+.btn:hover{border-color:var(--accent)}
+.textbtn{border:0;background:none;color:var(--accent);padding:0;text-align:left}
+.textbtn:hover{text-decoration:underline}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.pill{font-size:11px;border-radius:5px;padding:3px 7px;background:var(--soft);color:var(--accent);overflow-wrap:anywhere}
+.pill.good{background:var(--goodbg);color:var(--good)}.pill.bad{background:var(--badbg);color:var(--bad)}.pill.warn{background:var(--warnbg);color:var(--warn)}.pill.neutral{background:var(--bg);color:var(--muted)}
+.section-caption{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.section-caption span{color:var(--muted);font-size:12px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:15px;display:flex;flex-direction:column;gap:8px;text-align:left}
+.card.bad{border-color:var(--bad)}
+.card:hover{border-color:var(--accent);box-shadow:var(--shadow)}
+.card p{font-size:13px;color:var(--muted);margin:0;white-space:pre-line;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.card .pills{margin:0}
+.card small{margin-top:auto;color:var(--muted)}
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;align-items:start}
+.diagram-scroll{overflow:auto;height:61vh;min-height:340px;padding:12px}
+.diagram svg{display:block;margin:0 auto}
+.overview-map{padding:15px;overflow:auto}
+.overview-map svg{display:block;width:100%;height:auto;max-height:80vh}
+.inspector{padding:15px;max-height:calc(61vh + 48px);overflow:auto}
+.inspector h4{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:18px 0 7px}
+.inspector p{font-size:13px}
+.inspector .pills{margin:8px 0}
+#diagram g.pele-state,#diagram g.pele-cluster,#diagram .pele-edge-label{cursor:pointer}
+#diagram .pele-edge path{cursor:pointer;pointer-events:stroke}
+#diagram .fade{opacity:.24}
+#diagram .pele .selected rect{stroke:var(--accent)!important;stroke-width:4px!important}
+#diagram .pele .selected path{stroke:var(--accent)!important;stroke-width:3px!important}
+#diagram .pele .selected .pele-marker{fill:var(--accent)!important}
+.pathlist{font-size:12px;padding-left:20px}
+.tabs{display:flex;flex-wrap:wrap;gap:2px;border-bottom:1px solid var(--line);padding:5px 8px 0}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:9px 11px;color:var(--muted);font-size:12px}
+.tabs button.active{border-bottom-color:var(--accent);color:var(--fg);font-weight:600}
+.tabbody{padding:15px}
+.tabbody[hidden]{display:none}
+.lower{margin-top:15px}
+pre{font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre;overflow:auto;margin:10px 0;background:var(--code);border-radius:7px;padding:12px;color:var(--fg);max-height:70vh}
+code,.path{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere}
+.source{margin-bottom:20px}
+.source p{color:var(--muted);font-size:13px}
+.rule{border:1px solid var(--line);border-radius:7px;padding:12px;margin:10px 0}
+.rule.bad{border-color:var(--bad)}
+.related{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 18px}
+.related .btn{color:var(--accent)}
+.scope-columns{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.scope-columns ul{padding-left:20px;color:var(--muted);font-size:13px}
+.muted,.meta{color:var(--muted)}
+.meta{font-size:12px}
+details{margin:0 14px 14px}
+summary{cursor:pointer;font-size:13px}
+@media(max-width:1200px){.workspace{grid-template-columns:minmax(0,1fr) 290px}.layout{grid-template-columns:220px minmax(0,1fr)}main{padding:18px}}
+@media(max-width:950px){.layout{grid-template-columns:180px minmax(0,1fr)}.workspace{grid-template-columns:1fr}.inspector{max-height:none}.scope-columns{grid-template-columns:1fr}.diagram-scroll{height:65vh}}
+@media(max-width:650px){.layout{grid-template-columns:1fr}nav{position:static;height:auto;max-height:210px;border-right:0;border-bottom:1px solid var(--line)}main{padding:14px}h1{font-size:22px}}
+</style>
+</head>
+<body>
+<header><div><strong id="page-title"></strong><small id="counts"></small></div><span class="meta" id="built"></span></header>
+<div class="layout"><nav aria-label="Charts"><input id="search" type="search" placeholder="Find a chart" aria-label="Find a chart"><div id="navigation"></div></nav><main id="content" tabindex="-1"></main></div>
+<script type="application/json" id="dashboard-data">/*DATA*/</script>
+<script>
+const data = JSON.parse(document.getElementById('dashboard-data').textContent);
+const byId = new Map(data.charts.map(c => [c.id, c]));
+const groups = [...new Set(data.charts.map(c => c.group))];
+const esc = v => String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const q = s => document.querySelector(s);
+const pre = text => `<pre>${esc(text)}</pre>`;
+const TONE = {breaks: 'bad', holds: 'good', 'not checked': 'warn'};
+const MARKS = ['breaks', 'mayBreak', 'bugPath', 'repeats'];
+const WORDS = {breaks: 'Breaks a rule', mayBreak: 'Breaks a rule in some cases', bugPath: 'On the shortest path to a bug', repeats: 'Repeats forever in a counterexample'};
+const MARK_TONE = {breaks: 'bad', mayBreak: 'warn', bugPath: '', repeats: ''};
+let current = null, zoom = 1, natural = null;
+
+const tone = c => c.rules.some(r => r.status === 'breaks') ? 'bad' : c.rules.some(r => r.status === 'not checked') ? 'warn' : 'good';
+const rulePill = r => `<span class="pill ${TONE[r.status]}">${esc(r.name)} ${r.status}</span>`;
+const count = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+const shape = c => c.mmd === null ? 'Report only, no chart' : `${count(Object.keys(c.states).length, 'state', 'states')} · ${count(c.edges.length, 'arrow', 'arrows')}`;
+const sourceHTML = s => `<section class="source"><strong class="path">${esc(s.path)}:${s.start}-${s.end}</strong>${s.note ? `<p>${esc(s.note)}</p>` : ''}${pre(s.text.split('\n').map((l, i) => `${String(s.start + i).padStart(5)}  ${l}`).join('\n'))}</section>`;
+const list = (items, empty) => items.length ? `<ul>${items.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : `<p class="meta">${empty}</p>`;
+
+function navigation() {
+  const filter = q('#search').value.toLowerCase().trim();
+  const visible = data.charts.filter(c => [c.title, c.summary, c.group, c.id].join(' ').toLowerCase().includes(filter));
+  q('#navigation').innerHTML = `<button data-open=""><span class="dot neutral"></span>Overview</button>` + groups.map(g => {
+    const found = visible.filter(c => c.group === g);
+    return found.length ? `<h2>${esc(g)}</h2>` + found.map(c => `<button data-open="${esc(c.id)}"><span class="dot ${tone(c)}" aria-hidden="true"></span>${esc(c.title)}</button>`).join('') : '';
+  }).join('');
+  document.querySelectorAll('nav [data-open]').forEach(b => {
+    const active = b.dataset.open === (current?.id ?? '');
+    b.classList.toggle('active', active);
+    if (active) b.setAttribute('aria-current', 'page');
+  });
+}
+
+function overview() {
+  const breaking = data.charts.filter(c => tone(c) === 'bad').length;
+  const card = c => {
+    const broken = c.rules.filter(r => r.status === 'breaks');
+    const unchecked = c.rules.filter(r => r.status === 'not checked');
+    const holds = c.rules.filter(r => r.status === 'holds').length;
+    return `<button class="card ${tone(c) === 'bad' ? 'bad' : ''}" data-open="${esc(c.id)}"><h3>${esc(c.title)}</h3><p>${esc(c.summary)}</p><div class="pills">${broken.map(rulePill).join('')}${unchecked.map(rulePill).join('')}${holds ? `<span class="pill good">${count(holds, 'rule holds', 'rules hold')}</span>` : ''}</div><small>${shape(c)}</small></button>`;
+  };
+  return `<h1>${esc(data.title)}</h1><p class="lead">${count(data.charts.length, 'chart', 'charts')}. ${breaking ? `${count(breaking, 'chart breaks', 'charts break')} a rule.` : 'No rule breaks.'} Each verdict comes from the TLC report of that chart.</p>
+  ${data.overview ? `<section class="panel"><div class="panel-head">Overview map</div><div class="overview-map">${data.overview.svg}</div><details><summary>Mermaid text</summary>${pre(data.overview.mmd)}</details></section>` : ''}
+  ${groups.map(g => {
+    const charts = data.charts.filter(c => c.group === g);
+    return `<div class="section-caption"><h2>${esc(g)}</h2><span>${count(charts.length, 'chart', 'charts')}</span></div><div class="cards">${charts.map(card).join('')}</div>`;
+  }).join('')}`;
+}
+
+function inspectorIntro(c) {
+  const marks = Object.entries(c.legend);
+  return `<h3>Inspector</h3><p>Click a state or an arrow, or focus one and press Enter.</p>${marks.length ? `<h4>Legend</h4><div class="pills">${marks.map(([cls, text]) => `<span class="pill ${MARK_TONE[cls] ?? 'neutral'}">${esc(text)}</span>`).join('')}</div>` : ''}<h4>What the report says</h4><p class="lead" style="font-size:13px">${esc(c.intro)}</p>`;
+}
+
+function renderChart(c) {
+  const related = c.links.map(id => `<button class="btn" data-open="${esc(id)}">${esc(byId.get(id).title)}</button>`).join('');
+  const marked = Object.values(c.states).some(s => s.classes.some(cls => cls !== 'repeats' && MARKS.includes(cls)));
+  const tabs = [['rules', 'Rules'], ['report', 'Report'], ['sources', 'Sources'], ['spec', 'Spec'], ['mermaid', 'Mermaid'], ['tlc', 'TLC'], ['scope', 'Scope'], ['rebuild', 'Rebuild']];
+  const first = c.mmd === null ? 'report' : 'rules';
+  const panel = (id, html) => `<div class="tabbody" data-panel="${id}" role="tabpanel"${id === first ? '' : ' hidden'}>${html}</div>`;
+  const diagram = c.mmd === null
+    ? `<div class="banner warn">There is no chart, because the model has more states than the chart budget of the statechart command. The report below still gives the verdict for each rule.</div>`
+    : `<div class="workspace"><section class="panel"><div class="panel-head">Statechart <span class="spacer"></span>${marked ? '<button class="btn" data-bug>Bug path</button>' : ''}<button class="btn" data-zoom="out" aria-label="Zoom out">−</button><button class="btn" data-zoom="fit">Fit</button><button class="btn" data-zoom="in" aria-label="Zoom in">+</button><button class="btn" data-clear>Clear</button><button class="btn" data-save>Save SVG</button></div><div class="diagram-scroll" id="diagram-scroll"><div class="diagram" id="diagram">${c.svg}</div></div></section><aside class="panel" aria-label="Inspector"><div class="inspector" id="inspector" aria-live="polite">${inspectorIntro(c)}</div></aside></div>`;
+  return `<h1>${esc(c.title)}</h1><p class="lead">${esc(c.summary)}</p>
+  <div class="pills"><span class="pill neutral">${esc(c.group)}</span>${c.rules.map(rulePill).join('')}<span class="pill neutral">${shape(c)}</span></div>
+  ${related ? `<div class="related"><span class="meta">Related charts</span>${related}</div>` : ''}
+  ${diagram}
+  <section class="panel lower"><div class="tabs" role="tablist">${tabs.map(([id, label]) => `<button role="tab" data-tab="${id}" class="${id === first ? 'active' : ''}" aria-selected="${id === first}">${label}</button>`).join('')}</div>
+  ${panel('rules', (c.rules.length ? c.rules.map(r => `<article class="rule ${r.status === 'breaks' ? 'bad' : ''}"><h3>${esc(r.name)} <span class="pill ${TONE[r.status]}">${r.status}</span></h3>${r.detail ? pre(r.detail) : `<p class="meta">${r.status === 'holds' ? 'TLC found no reachable state that breaks this rule.' : 'TLC did not check this rule.'}</p>`}</article>`).join('') : '<p class="meta">The report lists no rules.</p>') + '<p class="meta">Each verdict comes from report.md. Notes in dashboard.json never change a verdict.</p>')}
+  ${panel('report', `<p class="meta">${esc(c.folder)}/report.md</p>${pre(c.report)}`)}
+  ${panel('sources', c.sources.length ? `<p class="meta">Excerpts read when this page was built, ${esc(data.built)}.</p>${c.sources.map(sourceHTML).join('')}` : `<p class="meta">No source excerpts. Add "sources" to dashboard.json in ${esc(c.specDir)} to show code next to the chart.</p>`)}
+  ${panel('spec', c.spec.length ? c.spec.map(f => `<h3 class="path">${esc(f.name)}</h3>${pre(f.text)}`).join('') : `<p class="meta">No .tla, .cfg or view.mjs file in ${esc(c.specDir)}.</p>`)}
+  ${panel('mermaid', c.mmd === null ? '<p class="meta">No chart.mmd, because the model has more states than the chart budget.</p>' : `<p class="meta">${esc(c.folder)}/chart.mmd</p>${pre(c.mmd)}`)}
+  ${panel('tlc', c.tlc === null ? `<p class="meta">No tlc.out in ${esc(c.folder)}.</p>` : `<p class="meta">What TLC printed on the config as written.</p>${pre(c.tlc)}`)}
+  ${panel('scope', `${c.scope ? `<p>${esc(c.scope)}</p>` : ''}<div class="scope-columns"><section><h3>Assumptions</h3>${list(c.assumptions, 'None listed in dashboard.json.')}</section><section><h3>Left out of the model</h3>${list(c.omissions, 'None listed in dashboard.json.')}</section></div><h3>What the chart draws and leaves out</h3><p class="lead" style="font-size:13px">${esc(c.intro || 'The report says nothing about what the chart leaves out.')}</p>`)}
+  ${panel('rebuild', `<p>Run this after an input changes. It reuses the page when no input changed and rebuilds it otherwise. Add --force to rebuild anyway.</p>${pre(data.command)}`)}
+  </section>`;
+}
+
+function ancestors(id) {
+  const out = [];
+  for (let s = current.states[id]?.within; s; s = current.states[s]?.within) out.push(s);
+  return out;
+}
+const outgoing = id => { const from = new Set([id, ...ancestors(id)]); return current.edges.filter(e => from.has(e.from)); };
+const incoming = id => current.edges.filter(e => e.to === id || ancestors(e.to).includes(id));
+const label = id => current.states[id]?.label ?? id;
+
+function setZoom() {
+  const svg = q('#diagram svg');
+  if (!svg || !natural) return;
+  svg.setAttribute('width', natural.width * zoom);
+  svg.setAttribute('height', natural.height * zoom);
+}
+function fit() {
+  const scroll = q('#diagram-scroll');
+  if (!scroll || !natural) return;
+  const style = getComputedStyle(scroll);
+  const width = scroll.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - 2;
+  const height = scroll.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom) - 2;
+  zoom = Math.min(1.25, width / natural.width, height / natural.height);
+  setZoom();
+}
+function clearSelection() {
+  document.querySelectorAll('#diagram .selected, #diagram .fade').forEach(el => el.classList.remove('selected', 'fade'));
+}
+function highlight(nodes, edges) {
+  clearSelection();
+  const keep = new Set(nodes.flatMap(id => [id, ...ancestors(id)]));
+  const known = new Set(current.edges.map(e => e.id));
+  document.querySelectorAll('#diagram g.pele-state[data-id], #diagram g.pele-cluster[data-id]').forEach(el => {
+    if (current.states[el.dataset.id]) el.classList.toggle('fade', !keep.has(el.dataset.id));
+  });
+  document.querySelectorAll('#diagram g.pele-edge[data-id], #diagram g.pele-edge-label[data-id]').forEach(el => {
+    if (known.has(el.dataset.id)) el.classList.toggle('fade', !edges.includes(el.dataset.id));
+  });
+  for (const id of [...nodes, ...edges]) document.querySelectorAll(`#diagram [data-id="${CSS.escape(id)}"]`).forEach(el => el.classList.add('selected'));
+}
+function pathTo(target) {
+  const queue = current.starts.map(id => ({id, nodes: [id], edges: []}));
+  const seen = new Set();
+  while (queue.length) {
+    const path = queue.shift();
+    if (path.id === target || ancestors(path.id).includes(target)) return path;
+    if (seen.has(path.id)) continue;
+    seen.add(path.id);
+    for (const e of outgoing(path.id)) queue.push({id: e.to, nodes: [...path.nodes, e.to], edges: [...path.edges, e.id]});
+  }
+  return null;
+}
+const arrowButton = (e, end) => `<li><button class="textbtn" data-edge="${esc(e.id)}">${esc(e.label || '(no label)')}</button> <span class="muted">${end === 'to' ? 'to' : 'from'} ${esc(label(e[end]))}</span></li>`;
+function inspectState(id) {
+  const s = current.states[id];
+  const out = outgoing(id), into = incoming(id);
+  highlight([id, ...out.map(e => e.to), ...into.map(e => e.from)], [...out, ...into].map(e => e.id));
+  const marks = s.classes.map(cls => `<span class="pill ${MARK_TONE[cls] ?? 'neutral'}">${esc(current.legend[cls] ?? WORDS[cls] ?? `Group ${cls}`)}</span>`).join('');
+  const note = current.stateNotes[s.label];
+  q('#inspector').innerHTML = `<h3 data-inspected="state">${esc(s.label)}</h3>${s.parent ? '<p class="meta">Parent state. Its arrows apply to every state inside it.</p>' : ''}${s.within ? `<p class="meta">Inside <button class="textbtn" data-state="${esc(s.within)}">${esc(label(s.within))}</button></p>` : ''}${marks ? `<div class="pills">${marks}</div>` : ''}${note ? `<p>${esc(note)}</p>` : ''}<button class="btn" data-path="${esc(id)}">Show a path here</button>
+  <h4>Arrows out</h4>${out.length ? `<ul>${out.map(e => arrowButton(e, 'to')).join('')}</ul>` : '<p class="muted">No arrow leaves this state.</p>'}
+  <h4>Arrows in</h4>${into.length ? `<ul>${into.map(e => arrowButton(e, 'from')).join('')}</ul>` : `<p class="muted">${current.starts.includes(id) ? 'No arrow enters this start state.' : 'No arrow enters this state.'}</p>`}`;
+}
+function inspectEdge(id) {
+  const e = current.edges.find(e => e.id === id);
+  if (!e) return;
+  highlight([e.from, e.to], [id]);
+  const note = current.arrowNotes[e.label] ?? current.arrowNotes[e.label.replace(/ \[[^\]]*\]$/, '')];
+  q('#inspector').innerHTML = `<h3 data-inspected="arrow">${esc(e.label || '(no label)')}</h3><p><button class="textbtn" data-state="${esc(e.from)}">${esc(label(e.from))}</button></p><p class="muted">moves to</p><p><button class="textbtn" data-state="${esc(e.to)}">${esc(label(e.to))}</button></p>${note ? `<h4>Notes</h4><p>${esc(note.description)}</p>${(note.sources ?? []).map(i => sourceHTML(current.sources[i])).join('')}` : ''}`;
+}
+function showPath(id) {
+  const path = pathTo(id);
+  if (!path) {
+    q('#inspector').insertAdjacentHTML('beforeend', '<h4>Path</h4><p class="muted">No path from a start state reaches this state.</p>');
+    return;
+  }
+  highlight(path.nodes, path.edges);
+  const steps = path.nodes.map((n, i) => `<li>${i ? `${esc(current.edges.find(e => e.id === path.edges[i - 1]).label)}, then ` : ''}<button class="textbtn" data-state="${esc(n)}">${esc(label(n))}</button></li>`);
+  q('#inspector').insertAdjacentHTML('beforeend', `<h4>Shortest path from a start state</h4><ol class="pathlist" start="0">${steps.join('')}</ol>`);
+}
+function showBugPath() {
+  const marked = new Set(Object.entries(current.states).filter(([, s]) => s.classes.some(c => c === 'bugPath' || c === 'breaks' || c === 'mayBreak')).map(([id]) => id));
+  highlight([...marked], current.edges.filter(e => marked.has(e.from) && marked.has(e.to)).map(e => e.id));
+  const broken = current.rules.filter(r => r.status === 'breaks');
+  q('#inspector').innerHTML = `<h3 data-inspected="bug">Bug path</h3><p>The highlighted states break a rule or lie on the shortest path to a state that does.</p>${broken.map(r => `<h4>${esc(r.name)} breaks</h4>${pre(r.detail)}`).join('')}`;
+}
+function switchTab(id) {
+  document.querySelectorAll('[data-tab]').forEach(b => { b.classList.toggle('active', b.dataset.tab === id); b.setAttribute('aria-selected', b.dataset.tab === id); });
+  document.querySelectorAll('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== id);
+}
+function save() {
+  const url = URL.createObjectURL(new Blob([current.svg], {type: 'image/svg+xml'}));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${current.id}.svg`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function display(id) {
+  current = byId.get(id) ?? null;
+  natural = null;
+  navigation();
+  if (!current) {
+    q('#content').innerHTML = overview();
+    document.title = data.title;
+  } else {
+    q('#content').innerHTML = renderChart(current);
+    document.title = `${current.title} · ${data.title}`;
+    const svg = q('#diagram svg');
+    if (svg) {
+      natural = {width: Number(svg.getAttribute('width')), height: Number(svg.getAttribute('height'))};
+      svg.querySelectorAll('g.pele-state[data-id], g.pele-cluster[data-id], g.pele-edge-label[data-id]').forEach(el => {
+        const s = current.states[el.dataset.id], e = current.edges.find(e => e.id === el.dataset.id);
+        if (!s && !e) return;
+        el.setAttribute('tabindex', '0');
+        el.setAttribute('role', 'button');
+        el.setAttribute('aria-label', s ? `State ${s.label}` : `Arrow ${e.label}`);
+      });
+      fit();
+    }
+  }
+  window.scrollTo(0, 0);
+  q('#content').focus({preventScroll: true});
+}
+function open(id) {
+  if (decodeURIComponent(location.hash.slice(1)) === id) display(id);
+  else location.hash = encodeURIComponent(id);
+}
+function activate(target) {
+  const button = target.closest('button');
+  if (button) {
+    const d = button.dataset;
+    if ('open' in d) return open(d.open);
+    if (d.tab) return switchTab(d.tab);
+    if (d.state) return inspectState(d.state);
+    if (d.edge) return inspectEdge(d.edge);
+    if (d.path) return showPath(d.path);
+    if ('bug' in d) return showBugPath();
+    if ('clear' in d) { clearSelection(); q('#inspector').innerHTML = inspectorIntro(current); return; }
+    if ('save' in d) return save();
+    if (d.zoom) { if (d.zoom === 'fit') return fit(); zoom *= d.zoom === 'in' ? 1.2 : 1 / 1.2; return setZoom(); }
+    return;
+  }
+  const g = target.closest('#diagram [data-id]');
+  if (!g || !current) return;
+  if (current.states[g.dataset.id]) inspectState(g.dataset.id);
+  else if (current.edges.some(e => e.id === g.dataset.id)) inspectEdge(g.dataset.id);
+}
+
+q('#page-title').textContent = data.title;
+q('#counts').textContent = `${data.charts.length} charts · ${data.charts.filter(c => tone(c) === 'bad').length} with a broken rule · works offline`;
+q('#built').textContent = `Built ${new Date(data.built).toLocaleString()}`;
+q('#search').addEventListener('input', navigation);
+window.addEventListener('hashchange', () => display(decodeURIComponent(location.hash.slice(1))));
+window.addEventListener('resize', fit);
+document.addEventListener('click', e => activate(e.target));
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && current?.svg) { clearSelection(); return; }
+  if ((e.key === 'Enter' || e.key === ' ') && e.target instanceof Element && e.target.matches('#diagram [data-id][tabindex]')) {
+    e.preventDefault();
+    activate(e.target);
+  }
+});
+display(decodeURIComponent(location.hash.slice(1)));
+</script>
+</body>
+</html>
