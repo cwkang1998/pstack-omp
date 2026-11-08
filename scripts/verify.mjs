@@ -60,6 +60,11 @@ const requiredSkills = new Set([
   "statechart",
   "create-formal-verification-skill",
   "maintain-formal-verification-skill",
+  "grill-me",
+  "grilling",
+  "grill-with-docs",
+  "domain-modeling",
+  "wizard",
 ]);
 
 const failures = [];
@@ -95,7 +100,7 @@ const collect = async (directory) => {
 await collect(skillsRoot);
 
 for (const path of markdownFiles) {
-  const source = await readFile(path, "utf8");
+  const source = (await readFile(path, "utf8")).replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1[ \t]*$/gmu, "");
   for (const match of source.matchAll(/\]\(([^)#][^)]*)\)/gu)) {
     const target = match[1].split("#", 1)[0];
     if (target === "" || /^[a-z]+[0-9]*$/u.test(target)) continue;
@@ -221,6 +226,18 @@ if (!roster) failures.push(`${relative(root, adapterPath)} is missing the closed
 for (const agent of new Set([...(roster?.split("\n") ?? []), ...mappedAgents])) {
   if (!ompBundledAgents.has(agent) && !packageAgents.has(agent)) {
     failures.push(`${relative(root, adapterPath)} routes to ${agent}, which is neither OMP-bundled nor shipped in agents/`);
+  }
+}
+
+const localRoutesUrl = "skill://pstack-omp/references/local-routes.md";
+const routerPath = join(skillsRoot, "poteto-mode", "SKILL.md");
+if (!(await readFile(routerPath, "utf8")).includes(localRoutesUrl)) {
+  failures.push(`${relative(root, routerPath)} no longer points to ${localRoutesUrl}`);
+}
+const localRoutesPath = join(skillsRoot, "pstack-omp", "references", "local-routes.md");
+for (const match of (await readFile(localRoutesPath, "utf8")).matchAll(/\*\*([a-z0-9-]+)\*\* skill/gu)) {
+  if (!skillDirs.includes(match[1])) {
+    failures.push(`${relative(root, localRoutesPath)} routes to missing skill ${match[1]}`);
   }
 }
 
