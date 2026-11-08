@@ -15,7 +15,11 @@ version() {
     echo $((${major:-0} * 1000000 + ${minor:-0} * 1000 + ${patch:-0}))
   }
 }
-node=$(version node)
+# Node refuses to strip types from a file whose real path is under node_modules.
+case $(CDPATH='' cd -- "$(dirname "$self")" && pwd -P)/ in
+  */node_modules/*) node_modules=1 node=0 ;;
+  *) node_modules='' node=$(version node) ;;
+esac
 if [ "$node" -ge 23006000 ] || { [ "$node" -ge 22018000 ] && [ "$node" -lt 23000000 ]; }; then
   exec node --disable-warning=ExperimentalWarning "$entry" "$@"
 fi
@@ -25,5 +29,9 @@ fi
 if [ "$(version deno)" -ge 2000000 ]; then
   exec deno run --quiet --no-prompt --allow-read --allow-write --allow-run --allow-env "$entry" "$@"
 fi
-echo "statechart needs Node 22.18 to 22.x, Node 23.6 or later, Bun 1.1.5 or later, or Deno 2.0 or later." >&2
+if [ "$node_modules" ]; then
+  echo "Node cannot run statechart.ts under node_modules, so statechart needs Bun 1.1.5 or later or Deno 2.0 or later." >&2
+else
+  echo "statechart needs Node 22.18 to 22.x, Node 23.6 or later, Bun 1.1.5 or later, or Deno 2.0 or later." >&2
+fi
 exit 127
