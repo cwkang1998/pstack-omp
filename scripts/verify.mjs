@@ -65,6 +65,7 @@ const requiredSkills = new Set([
   "grill-with-docs",
   "domain-modeling",
   "wizard",
+  "statechart-dashboard",
 ]);
 
 const failures = [];
