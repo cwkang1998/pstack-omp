@@ -201,6 +201,15 @@ const withNode24 = (bin: string) => {
   return bin;
 };
 
+const withDeno2 = (bin: string) => {
+  fs.writeFileSync(
+    path.join(bin, "deno"),
+    '#!/bin/sh\n[ "$1" = --version ] && echo deno 2.9.6 && exit\necho deno\n',
+    { mode: 0o755 },
+  );
+  return bin;
+};
+
 test("the launcher under node_modules runs statechart.ts on Bun 1.1.5 even when PATH has Node 24", () => {
   const command = installedLauncher();
   const r = run(path.join(corpus, "Login"), {
@@ -212,17 +221,17 @@ test("the launcher under node_modules runs statechart.ts on Bun 1.1.5 even when 
   assert.equal(r.stdout, `${path.join(path.dirname(command), "statechart.ts")}\n`);
 });
 
-test("the launcher whose real path is under node_modules stops with exit 127 when PATH has only Node 24", () => {
+test("the launcher whose real path is under node_modules stops with exit 127 when PATH has Node 24 and Deno 2", () => {
   const link = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "statechart-link-")), "pkg");
   fs.symlinkSync(path.dirname(installedLauncher()), link);
   const r = run(path.join(corpus, "Login"), {
     command: [path.join(link, "statechart")],
-    env: { PATH: withNode24(launcherTools()) },
+    env: { PATH: withDeno2(withNode24(launcherTools())) },
   });
   assert.equal(r.status, 127);
   assert.equal(
     r.stderr,
-    "Node cannot run statechart.ts under node_modules, so statechart needs Bun 1.1.5 or later or Deno 2.0 or later.\n",
+    "Node and Deno cannot run statechart.ts under node_modules, so statechart needs Bun 1.1.5 or later.\n",
   );
   assert.deepEqual(r.files, []);
 });
