@@ -176,6 +176,7 @@ const forbidden = [
   "gpt-5.6-sol-max",
   "grok-4.6-fast-xhigh",
   "claude-opus-5-thinking-xhigh",
+  "<skill dir>/scripts/statechart ",
 ];
 for (const path of markdownFiles) {
   const source = await readFile(path, "utf8");

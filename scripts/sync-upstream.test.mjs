@@ -13,6 +13,7 @@ test("normalization removes the supported Cursor runtime bindings", () => {
     "agent: Task subagent",
     "question: AskQuestion",
     "model: claude-fable-5-thinking-max",
+    "<skill dir>/scripts/statechart SPEC.tla [--config FILE] [--view FILE] [--out DIR]",
   ].join("\n");
 
   const normalized = normalizeContent(source);
@@ -20,6 +21,8 @@ test("normalization removes the supported Cursor runtime bindings", () => {
   assert.doesNotMatch(normalized, /~\/\.cursor\/|AskQuestion|claude-fable/u);
   assert.match(normalized, /\$PSTACK_CONFIG/u);
   assert.match(normalized, /host task runner/u);
+  assert.ok(normalized.includes("bun <skill dir>/scripts/statechart.ts SPEC.tla"));
+  assert.ok(!normalized.includes("<skill dir>/scripts/statechart SPEC.tla"));
 });
 
 test("apply updates an upstream-owned file and advances the lock", async () => {
