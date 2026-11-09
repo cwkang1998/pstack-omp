@@ -32,6 +32,7 @@ export function normalizeContent(source) {
     .replaceAll("AskQuestion", "structured interaction tool")
     .replaceAll('environment: "cloud"', "environment: host-managed")
     .replaceAll("environment: 'cloud'", "environment: host-managed")
+    .replaceAll("<skill dir>/scripts/statechart ", "bun <skill dir>/scripts/statechart.ts ")
     .replaceAll("claude-fable-5-thinking-max", "host-configured role/model")
     .replaceAll("gpt-5.6-sol-max", "host-configured role/model")
     .replaceAll("grok-4.6-fast-xhigh", "host-configured role/model")

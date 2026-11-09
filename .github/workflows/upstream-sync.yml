@@ -43,6 +43,8 @@ jobs:
           bun install --cwd skills/poteto-mode/scripts --frozen-lockfile
           bun test watch-pr check-plan.test.ts
           bunx tsc --project skills/poteto-mode/scripts/watch-pr/tsconfig.json --noEmit --strict
+          bun install --cwd skills/statechart-dashboard/scripts --frozen-lockfile
+          bun test skills/statechart-dashboard/scripts
 
       - name: Open update pull request
         uses: peter-evans/create-pull-request@v7

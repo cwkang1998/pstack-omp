@@ -20,6 +20,9 @@ scripts while replacing Cursor-only runtime assumptions with an OMP adapter.
   `poteto-mode` routes to `domain-modeling` and `wizard`, and reads the glossary in
   `.pstack/docs/`, through `skills/pstack-omp/references/local-routes.md`. The
   grill skills run only when you ask for them.
+- `statechart-dashboard`, a fork-local companion to `statechart`. It builds one
+  offline Chrome page from statechart output folders and rebuilds it only when an
+  input changed. `poteto-mode` routes to it after a statechart run.
 - Native OMP package metadata.
 - Daily upstream synchronization that opens a verified pull request.
 
@@ -119,6 +122,8 @@ npm run test:sync
 bun install --cwd skills/poteto-mode/scripts --frozen-lockfile
 bun test watch-pr check-plan.test.ts
 bunx tsc --project skills/poteto-mode/scripts/watch-pr/tsconfig.json --noEmit --strict
+bun install --cwd skills/statechart-dashboard/scripts --frozen-lockfile
+bun test skills/statechart-dashboard/scripts
 ```
 
 `npm run verify` checks skill inventory, frontmatter, local references, manifests,

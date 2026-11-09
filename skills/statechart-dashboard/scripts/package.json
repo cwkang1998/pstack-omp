@@ -1,0 +1,11 @@
+{
+  "name": "@cursor-skill/statechart-dashboard",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "pele": "1.9.0"
+  }
+}
