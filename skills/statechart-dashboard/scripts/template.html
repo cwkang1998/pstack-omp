@@ -156,7 +156,7 @@ function inspectorIntro(c) {
 
 function renderChart(c) {
   const related = c.links.map(id => `<button class="btn" data-open="${esc(id)}">${esc(byId.get(id).title)}</button>`).join('');
-  const marked = Object.values(c.states).some(s => s.classes.some(cls => cls !== 'repeats' && MARKS.includes(cls)));
+  const marked = Object.values(c.states).some(s => s.classes.some(cls => MARKS.includes(cls)));
   const tabs = [['rules', 'Rules'], ['report', 'Report'], ['sources', 'Sources'], ['spec', 'Spec'], ['mermaid', 'Mermaid'], ['tlc', 'TLC'], ['scope', 'Scope'], ['rebuild', 'Rebuild']];
   const first = c.mmd === null ? 'report' : 'rules';
   const panel = (id, html) => `<div class="tabbody" data-panel="${id}" role="tabpanel"${id === first ? '' : ' hidden'}>${html}</div>`;
@@ -259,10 +259,10 @@ function showPath(id) {
   q('#inspector').insertAdjacentHTML('beforeend', `<h4>Shortest path from a start state</h4><ol class="pathlist" start="0">${steps.join('')}</ol>`);
 }
 function showBugPath() {
-  const marked = new Set(Object.entries(current.states).filter(([, s]) => s.classes.some(c => c === 'bugPath' || c === 'breaks' || c === 'mayBreak')).map(([id]) => id));
+  const marked = new Set(Object.entries(current.states).filter(([, s]) => s.classes.some(c => MARKS.includes(c))).map(([id]) => id));
   highlight([...marked], current.edges.filter(e => marked.has(e.from) && marked.has(e.to)).map(e => e.id));
   const broken = current.rules.filter(r => r.status === 'breaks');
-  q('#inspector').innerHTML = `<h3 data-inspected="bug">Bug path</h3><p>The highlighted states break a rule or lie on the shortest path to a state that does.</p>${broken.map(r => `<h4>${esc(r.name)} breaks</h4>${pre(r.detail)}`).join('')}`;
+  q('#inspector').innerHTML = `<h3 data-inspected="bug">Bug path</h3><p>The highlighted states break a rule, lie on the shortest path to a state that does, or repeat forever in a counterexample.</p>${broken.map(r => `<h4>${esc(r.name)} breaks</h4>${pre(r.detail)}`).join('')}`;
 }
 function switchTab(id) {
   document.querySelectorAll('[data-tab]').forEach(b => { b.classList.toggle('active', b.dataset.tab === id); b.setAttribute('aria-selected', b.dataset.tab === id); });

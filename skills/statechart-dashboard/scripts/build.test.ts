@@ -44,9 +44,9 @@ type Embedded = {
   rules: { name: string; status: string; detail: string }[];
 };
 
-function charts(index: string): Embedded[] {
+function embedded(index: string): { title: string; charts: Embedded[] } {
   const json = readFileSync(index, "utf8").match(/<script type="application\/json" id="dashboard-data">([\s\S]*?)<\/script>/)?.[1];
-  return JSON.parse(json ?? "null").charts;
+  return JSON.parse(json ?? "null");
 }
 
 const verdicts = (chart: Embedded) => Object.fromEntries(chart.rules.map((r) => [r.name, r.status]));
@@ -57,12 +57,14 @@ test("embeds the states, arrows and verdicts of a flat chart and a regions chart
   const regions = copyRun(root, "LoginParallel");
   const page = join(root, "page");
 
-  const result = run("--out", page, flat, regions);
+  const result = run("--out", page, "--title", "Review /*DATA*/", flat, regions);
 
   expect(result.code).toBe(0);
   expect(result.stdout).toContain("Built");
   expect(existsSync(join(flat, "chart.svg"))).toBe(true);
-  const [counter, login] = charts(join(page, "index.html"));
+  const data = embedded(join(page, "index.html"));
+  expect(data.title).toBe("Review /*DATA*/");
+  const [counter, login] = data.charts;
   expect(counter.id).toBe("CounterRules");
   expect(Object.fromEntries(Object.entries(counter.states).map(([id, s]) => [id, s.label]))).toEqual({
     s0: "0",
@@ -86,7 +88,7 @@ test("embeds the states, arrows and verdicts of a flat chart and a regions chart
   expect(verdicts(login)).toEqual({ SignedInWhileLocked: "breaks", TypeOK: "holds", NoDeadlock: "holds" });
 });
 
-test("reuses an unchanged page and rebuilds it after report.md changes", () => {
+test("reuses an unchanged page and rebuilds it from another working folder or after report.md changes", () => {
   const root = scratch();
   const folder = copyRun(root, "Login");
   const page = join(root, "page");
@@ -99,12 +101,16 @@ test("reuses an unchanged page and rebuilds it after report.md changes", () => {
   expect(again.code).toBe(0);
   expect(again.stdout).toContain(`Reused ${index}`);
   expect(statSync(index).mtimeMs).toBe(built);
+  const elsewhere = Bun.spawnSync([process.execPath, build, "--no-open", "--out", page, folder], { cwd: root });
+  expect(elsewhere.stdout.toString()).toContain(`Built ${index}`);
+  expect(run("--force", "--out", page, folder).stdout).toContain(`Built ${index}`);
+  expect(run("--out", page, folder).stdout).toContain(`Reused ${index}`);
 
   appendFileSync(join(folder, "report.md"), "\nEdited after the first build.\n");
   const rebuilt = run("--out", page, folder);
 
   expect(rebuilt.stdout).toContain(`Built ${index}`);
-  expect(charts(index)[0].report).toContain("Edited after the first build.");
+  expect(embedded(index).charts[0].report).toContain("Edited after the first build.");
 });
 
 test("fails without touching the page when report.md is missing or dashboard.json is invalid", () => {
