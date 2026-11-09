@@ -61,6 +61,7 @@ test("apply updates an upstream-owned file and advances the lock", async () => {
     await writeFile(join(target, "skills/blast-radius/scripts/run"), "#!/bin/sh\n", { mode: 0o644 });
     execFileSync("git", ["add", "."], { cwd: source });
     execFileSync("git", ["commit", "-q", "-m", "update"], { cwd: source });
+    const updated = execFileSync("git", ["rev-parse", "HEAD"], { cwd: source, encoding: "utf8" }).trim();
     await writeFile(
       join(target, "upstream.lock.json"),
       `${JSON.stringify({
@@ -89,7 +90,7 @@ test("apply updates an upstream-owned file and advances the lock", async () => {
     const runMode = (await stat(join(target, "skills/blast-radius/scripts/run"))).mode;
     assert.equal(runMode & 0o111, 0o111);
     const lock = JSON.parse(await readFile(join(target, "upstream.lock.json"), "utf8"));
-    assert.notEqual(lock.commit, "0".repeat(40));
+    assert.equal(lock.commit, updated);
   } finally {
     await rm(fixture, { recursive: true, force: true });
   }
