@@ -454,6 +454,8 @@ async function main(argv: string[]) {
 
   const template = readFileSync(join(scripts, "template.html"), "utf8");
   const pele = JSON.parse(readFileSync(join(scripts, "package.json"), "utf8")).dependencies.pele;
+  const pageArgs = argv.filter((arg) => arg !== "--no-open" && arg !== "--force");
+  const command = `cd ${quote(process.cwd())} && bun ${quote(import.meta.path)} ${pageArgs.map(quote).join(" ")}`;
   const hasher = createHash("sha256")
     .update(readFileSync(import.meta.path))
     .update("\0")
@@ -461,7 +463,7 @@ async function main(argv: string[]) {
     .update("\0")
     .update(pele)
     .update("\0")
-    .update(JSON.stringify({ title: values.title ?? null, repo, overview: overviewPath, folders }));
+    .update(JSON.stringify({ title: values.title ?? null, repo, overview: overviewPath, folders, command }));
   for (const [path, text] of inputs) hasher.update("\0").update(path).update("\0").update(text);
   const hash = hasher.digest("hex");
 
@@ -490,7 +492,6 @@ async function main(argv: string[]) {
       overview = { mmd: overviewMmd, svg };
     }
     const title = values.title ?? "Statecharts";
-    const command = `cd ${quote(process.cwd())} && bun ${quote(import.meta.path)} ${argv.map(quote).join(" ")}`;
     const data = {
       title,
       built: new Date().toISOString(),
@@ -498,10 +499,12 @@ async function main(argv: string[]) {
       overview,
       charts: charts.map(({ notesPath, ...chart }) => chart),
     };
-    const page = template
-      .replace("{{hash}}", hash)
-      .replace("{{title}}", () => title.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`))
-      .replace("/*DATA*/", () => JSON.stringify(data).replaceAll("<", "\\u003c"));
+    const fills: Record<string, string> = {
+      "{{hash}}": hash,
+      "{{title}}": title.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`),
+      "/*DATA*/": JSON.stringify(data).replaceAll("<", "\\u003c"),
+    };
+    const page = template.replace(/\{\{hash\}\}|\{\{title\}\}|\/\*DATA\*\//g, (placeholder) => fills[placeholder]);
     mkdirSync(out, { recursive: true });
     const temp = join(out, `.index.html.${process.pid}.tmp`);
     try {
