@@ -7,10 +7,6 @@ description: "Build one offline Chrome page that shows every statechart of a run
 
 The page puts each chart next to its verdicts, so the reader can click through states, arrows, and bug paths in one place. It needs no server and no network. To make the charts, follow [the statechart skill](skill://statechart).
 
-## When to run
-
-Run it at the end of each statechart run that wrote an output folder. Run it also when the reader asks to see several statecharts together.
-
 ## Build the page
 
 ```sh

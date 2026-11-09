@@ -89,16 +89,17 @@ for (const name of requiredSkills) {
   }
 }
 
-const markdownFiles = [];
-const collect = async (directory) => {
+const skillFiles = [];
+const collectAll = async (directory) => {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     if (entry.name === "node_modules") continue;
     const path = join(directory, entry.name);
-    if (entry.isDirectory()) await collect(path);
-    else if (entry.name.endsWith(".md")) markdownFiles.push(path);
+    if (entry.isDirectory()) await collectAll(path);
+    else skillFiles.push(path);
   }
 };
-await collect(skillsRoot);
+await collectAll(skillsRoot);
+const markdownFiles = skillFiles.filter((path) => path.endsWith(".md"));
 
 for (const path of markdownFiles) {
   const source = (await readFile(path, "utf8")).replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1[ \t]*$/gmu, "");
@@ -187,16 +188,6 @@ for (const path of markdownFiles) {
   }
 }
 
-const skillFiles = [];
-const collectAll = async (directory) => {
-  for (const entry of await readdir(directory, { withFileTypes: true })) {
-    if (entry.name === "node_modules") continue;
-    const path = join(directory, entry.name);
-    if (entry.isDirectory()) await collectAll(path);
-    else skillFiles.push(path);
-  }
-};
-await collectAll(skillsRoot);
 for (const path of skillFiles) {
   if (/^(<{7}|>{7}) /mu.test(await readFile(path, "utf8"))) {
     failures.push(`${relative(root, path)} contains unresolved merge conflict markers`);
@@ -241,11 +232,6 @@ for (const match of (await readFile(localRoutesPath, "utf8")).matchAll(/\*\*([a-
   if (!skillDirs.includes(match[1])) {
     failures.push(`${relative(root, localRoutesPath)} routes to missing skill ${match[1]}`);
   }
-}
-
-const expectedSkillCount = requiredSkills.size;
-if (skillDirs.length < expectedSkillCount) {
-  failures.push(`expected at least ${expectedSkillCount} skill directories, found ${skillDirs.length}`);
 }
 
 if (failures.length > 0) {
