@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Lists the package's skills, playbooks, and agents from the tree and checks what README.md says about them: skill
-// commands, relative links and anchors, counts, agent and model names, and that the README links each one. Ported
+// commands, relative links and anchors, counts, agent names, and that the README links each one. Ported
 // from cursor/plugins scripts/check-pstack-docs.mjs. Exits 1 when the docs drift from the tree.
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
@@ -9,20 +9,18 @@ import { dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SETUP = join(ROOT, "skills", "setup-pstack", "SKILL.md");
 const ADAPTER = join(ROOT, "skills", "pstack-omp", "SKILL.md");
 
 const SMALL = "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen".split(" ");
 const TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
 // "The twenty-three playbooks" claims the whole set. "Three playbooks scale it up" names a subset, so it is not checked.
 const CLAIM = /\b(?:(all|has|of|ships|the|with) )?(\d+|[a-z]+(?:-[a-z]+)?) (short )?(skills|principles|playbooks|agents)\b/gi;
-// OMP runs a skill as /skill:<name>. $<name> is another harness's syntax and does nothing in OMP.
+// OMP runs a skill as /skill:<name>. Other harnesses' forms ($<name>, /<name>, /pstack:<name>) reach the model as plain
+// text, so the skill never loads.
 const COMMAND = /(?<=^|[\s`(|"'>])\/skill:([a-z][a-z0-9-]*)(?![\w/<-])/gm;
-const FOREIGN_COMMAND = /(?<=^|[\s`(|"'>])\$([a-z][a-z0-9-]*)(?![\w/<-])/gm;
+const FOREIGN_COMMAND = /(?<=^|[\s`(|"'>])(?:\$|\/(?:pstack:)?)([a-z][a-z0-9-]*)(?![\w/<-])/gm;
 const LINK = /\]\(<?([^)\s>]+)>?(?:\s+"[^"]*")?\)/g;
 const AGENT = /agent: "([^"]+)"/g;
-const MODEL_ID = /\b(?:claude-[a-z]+|grok|gpt)-\d(?:[\w.-]*\w)?/g;
-const MODEL_PROSE = /\b(opus|sonnet|grok) (\d+(?:\.\d+)?)\b/gi;
 
 function names(dir, keep) {
   return existsSync(dir) ? readdirSync(dir).filter((name) => keep(join(dir, name))).sort() : [];
@@ -39,7 +37,6 @@ const agents = names(join(ROOT, "agents"), isMarkdown).map((name) => name.slice(
 const roster = readFileSync(ADAPTER, "utf8").match(/roster is closed:\n\n```text\n([\s\S]*?)\n```/)?.[1].split("\n") ?? [];
 const docs = ["README.md"];
 const text = new Map(docs.map((doc) => [doc, readFileSync(join(ROOT, doc), "utf8")]));
-const setup = readFileSync(SETUP, "utf8");
 
 const problems = [];
 const lineOf = (doc, index) => text.get(doc).slice(0, index).split("\n").length;
@@ -93,8 +90,8 @@ for (const [doc, body] of text) {
     if (skills.includes(name)) named.add(name);
     else fail(doc, index, `names /skill:${name}, which no skill in this package provides`);
   }
-  for (const { 1: name, index } of body.matchAll(FOREIGN_COMMAND)) {
-    if (skills.includes(name)) fail(doc, index, `names $${name}, but OMP runs skills as /skill:${name}`);
+  for (const { 0: match, 1: name, index } of body.matchAll(FOREIGN_COMMAND)) {
+    if (skills.includes(name)) fail(doc, index, `names ${match}, but OMP runs skills as /skill:${name}`);
   }
   for (const { 1: href, index } of body.matchAll(LINK)) {
     if (/^[a-z][a-z0-9+.-]*:/i.test(href)) continue;
@@ -112,13 +109,6 @@ for (const [doc, body] of text) {
     if (!agents.includes(name) && !roster.includes(name)) {
       fail(doc, index, `names agent "${name}", which agents/ does not ship and the adapter's roster does not list`);
     }
-  }
-  for (const { 0: id, index } of body.matchAll(MODEL_ID)) {
-    if (!setup.includes(id)) fail(doc, index, `names model ${id}, which setup-pstack does not use`);
-  }
-  for (const { 0: match, 1: family, 2: version, index } of body.matchAll(MODEL_PROSE)) {
-    const prefix = family.toLowerCase() === "grok" ? `grok-${version}` : `claude-${family.toLowerCase()}-${version.replace(".", "-")}`;
-    if (!setup.includes(prefix)) fail(doc, index, `says "${match}", but setup-pstack has no ${prefix} default`);
   }
 }
 

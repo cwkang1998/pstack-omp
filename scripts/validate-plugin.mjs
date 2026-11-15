@@ -10,7 +10,9 @@ import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // The plugin name pattern from cursor/plugins schemas/plugin.schema.json.
 const NAME = /^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$/;
-const SEMVER = /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/;
+// The semver.org regular expression.
+const SEMVER =
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
 
 let errors = 0;
 
@@ -40,17 +42,21 @@ if (typeof manifest.version !== "string" || !SEMVER.test(manifest.version)) {
 if (manifest.omp === null || typeof manifest.omp !== "object" || Array.isArray(manifest.omp)) {
   fail("package.json has no omp manifest, so OMP loads nothing from this package");
 } else {
-  for (const [key, value] of Object.entries(manifest.omp)) {
-    if (!Array.isArray(value)) continue;
-    for (const entry of value) {
-      const path = resolve(root, entry);
-      if (relative(root, path).startsWith("..")) {
-        fail(`package.json omp.${key} entry "${entry}" points outside the package`);
-      } else if (!existsSync(path)) {
-        fail(`package.json omp.${key} entry "${entry}" does not exist`);
-      }
+  // OMP reads paths from string and array fields, feature entries included, and documents no field list, so check
+  // every relative path anywhere in the manifest.
+  const checkPaths = (value, at) => {
+    if (typeof value === "string") {
+      if (!/^\.\.?\//.test(value)) return;
+      const path = resolve(root, value);
+      if (relative(root, path).startsWith("..")) fail(`package.json ${at} "${value}" points outside the package`);
+      else if (!existsSync(path)) fail(`package.json ${at} "${value}" does not exist`);
+    } else if (Array.isArray(value)) {
+      value.forEach((entry, index) => checkPaths(entry, `${at}[${index}]`));
+    } else if (value !== null && typeof value === "object") {
+      for (const [key, entry] of Object.entries(value)) checkPaths(entry, `${at}.${key}`);
     }
-  }
+  };
+  checkPaths(manifest.omp, "omp");
 }
 
 if (errors > 0) {

@@ -152,7 +152,7 @@ you want one directly.
 | [`/skill:interrogate`](./skills/interrogate/SKILL.md) | you have a diff and want different models to try to break it, keeping only findings a run proves. |
 | [`/skill:automate-me`](./skills/automate-me/SKILL.md) | you want your own `-mode` skill, drafted from how you've actually worked. |
 | [`/skill:make-bot-ui`](./skills/make-bot-ui/SKILL.md) | you want a page or dashboard whose buttons wake a Grok Bot over a webhook, including the sender-key handoff and Tailscale. |
-| [`/skill:setup-pstack`](./skills/setup-pstack/SKILL.md) | you want to pick which models pstack uses per role. detects your models and writes a config rule. |
+| [`/skill:setup-pstack`](./skills/setup-pstack/SKILL.md) | you want to pick which models pstack uses per role. detects your models, writes `.pstack/config.md`, and sets each agent's `task.agentModelOverrides` entry. |
 | [`/skill:reflect`](./skills/reflect/SKILL.md) | a long task landed and you want the recipe captured as a skill edit. |
 | [`/skill:correct`](./skills/correct/SKILL.md) | you keep correcting agents for the same mistakes. mines history for mistake classes, fixes each at the highest level that works (architecture, then types, lint, and ci, then tests, with docs last), and keeps a table pairing each rule with what enforces it. |
 | [`/skill:teach`](./skills/teach/SKILL.md) | you want to actually understand a change or subsystem, not just have it summarized. runs how + why and weaves one plain explanation, built up diagram by diagram. |
@@ -262,7 +262,10 @@ The updater:
    lines, and exits with status 2 until they are resolved.
 5. Runs the manifest, package, docs, updater, and skill script checks, the Bun
    tests, and strict TypeScript checking.
-6. Opens a pull request only after those checks pass.
+6. Opens a pull request only after those checks pass. When only the docs check
+   fails, for example because upstream added a skill the README tables do not
+   list yet, it opens the pull request as a draft with the failures in its body.
+   Add the missing rows on that branch before merging.
 
 Run it locally:
 
@@ -277,6 +280,7 @@ silently overwrites them.
 
 ## Development and verification
 
+```bash
 npm run validate
 npm run verify
 npm run check:docs
@@ -300,7 +304,9 @@ publishes no manifest schema, so these are the fields its plugin loader reads.
 `npm run check:docs` checks this README against the tree. Every `/skill:` command
 and relative link must resolve, anchors must match a heading, counts such as
 "twenty-three playbooks" must match, and the README must link every skill,
-playbook, and agent. A new skill needs a row in the tables above.
+playbook, and agent. It also flags a package skill written as `$name`, `/name`,
+or `/pstack:name`, which OMP does not run. A new skill needs a row in the tables
+above.
 
 `npm run test:skills` runs every `skills/*/scripts/test/*.test.ts` suite with
 Node's test runner.
