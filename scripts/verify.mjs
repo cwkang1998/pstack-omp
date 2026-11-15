@@ -195,7 +195,7 @@ for (const path of skillFiles) {
 }
 
 const ompBundledAgents = new Set(["scout", "reviewer", "security-reviewer", "task", "sonic"]);
-const packageAgents = new Set();
+const packageAgents = new Map();
 for (const entry of await readdir(join(root, "agents"))) {
   if (!entry.endsWith(".md")) continue;
   const path = join(root, "agents", entry);
@@ -209,12 +209,46 @@ for (const entry of await readdir(join(root, "agents"))) {
       failures.push(`${relative(root, path)} is missing frontmatter ${key}`);
     }
   }
-  packageAgents.add(name);
+  const list = (key) => [...(frontmatter.match(new RegExp(`^${key}:\\n((?:  - .*\\n?)*)`, "mu"))?.[1] ?? "").matchAll(/^  - "?([^"\n]+)"?$/gmu)].map((match) => match[1]);
+  packageAgents.set(name, { path, tools: list("tools"), models: list("model") });
+}
+for (const [name, agent] of packageAgents) {
+  if (!name.startsWith("pstack-")) continue;
+  // A second model, or a role something else sets, would let the agent run without its override.
+  if (agent.models.length !== 1 || agent.models[0] !== `@${name}`) {
+    failures.push(`${relative(root, agent.path)} must name only its own role, @${name}, as its model`);
+  }
+  if (name.startsWith("pstack-judge-") && agent.tools.some((tool) => tool === "edit" || tool === "write")) {
+    failures.push(`${relative(root, agent.path)} is a judge and must not have edit or write`);
+  }
 }
 const adapterPath = join(skillsRoot, "pstack-omp", "SKILL.md");
 const adapter = await readFile(adapterPath, "utf8");
 const roster = adapter.match(/The reference roster is closed:\n\n```text\n([\s\S]*?)\n```/u)?.[1];
-const mappedAgents = [...adapter.matchAll(/^\| `[a-z]+` \| `([a-z-]+)` \|/gmu)].map((match) => match[1]);
+const PANEL_SEATS = 3;
+const lineAgents = new Map(
+  [...adapter.matchAll(/^\| `([a-z ,-]+)` \| `([a-z<>N-]+)` \|$/gmu)].map((match) => [match[1], match[2]]),
+);
+const mappedAgents = [
+  ...[...adapter.matchAll(/^\| `[a-z]+` \| `([a-z-]+)` \|/gmu)].map((match) => match[1]),
+  ...[...lineAgents.values()].flatMap((agent) =>
+    agent.includes("<N>") ? Array.from({ length: PANEL_SEATS }, (_, i) => agent.replace("<N>", String(i + 1))) : [agent],
+  ),
+];
+const setupPath = join(skillsRoot, "setup-pstack", "SKILL.md");
+const configShape = (await readFile(setupPath, "utf8")).match(/^```\n# pstack model configuration[\s\S]*?\n```/mu)?.[0] ?? "";
+const configLines = [...configShape.matchAll(/^([a-z][a-z ,-]*): /gmu)].map((match) => match[1]);
+if (configLines.length === 0) failures.push(`${relative(root, setupPath)} has no config shape to check routing against`);
+for (const line of configLines) {
+  if (!lineAgents.has(line)) {
+    failures.push(`${relative(root, adapterPath)} has no Model routing row for the ${line} line in ${relative(root, setupPath)}`);
+  }
+}
+for (const line of lineAgents.keys()) {
+  if (!configLines.includes(line)) {
+    failures.push(`${relative(root, adapterPath)} routes ${line}, which is not a line in ${relative(root, setupPath)}`);
+  }
+}
 if (!roster) failures.push(`${relative(root, adapterPath)} is missing the closed agent roster`);
 for (const agent of new Set([...(roster?.split("\n") ?? []), ...mappedAgents])) {
   if (!ompBundledAgents.has(agent) && !packageAgents.has(agent)) {

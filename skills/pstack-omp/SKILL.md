@@ -13,7 +13,8 @@ While this skill is active, its role map is the specific pstack execution contra
 
 Use the live host's configured names. This mapping targets OMP's bundled task
 agents plus the `planner`, `designer`, and `librarian` agents this package ships
-in `agents/`.
+in `agents/`. The package also ships one agent for each config line that cannot
+share an agent's model. Model routing maps config lines to agents.
 
 | Canonical role | OMP agent | Contract |
 |---|---|---|
@@ -39,6 +40,16 @@ security-reviewer
 librarian
 task
 sonic
+pstack-hardest
+pstack-judgment
+pstack-reflect-tooling
+pstack-swarm-worker
+pstack-runner-1
+pstack-runner-2
+pstack-runner-3
+pstack-judge-1
+pstack-judge-2
+pstack-judge-3
 ```
 
 A canonically routed task item's `agent` value must be one of those names. Canonical role labels and model aliases are not agent names.
@@ -225,24 +236,35 @@ The root resolves a child question and sends the answer through `write agent://<
 
 ## Model routing
 
-OMP resolves a task agent through its current settings, including `modelRoles`, `task.agentModelOverrides`, the agent definition, and normal fallback. Agent selection and model selection are separate decisions.
+pstack never names a model on a task call. Each agent runs on its `task.agentModelOverrides` entry, which `/setup-pstack` writes from `$PSTACK_CONFIG` (or `.pstack/config.md`). Do not put a `model` field in a task item, and do not use a model alias as the `agent` value.
 
-Do not put a `model` field in a task item. Do not use a model alias as the `agent` value. Configure routing through the installed OMP settings and report the actual resolved model when independence matters.
+A spawn for a config line starts the agent below. Entry N of a panel line starts seat agent N. A role with no config line uses the canonical role map.
 
-Recommended role aliases:
-
-| OMP agent | Recommendation |
+| Config line | Agent |
 |---|---|
-| `scout` | `@smol` |
-| `planner` | `@plan` |
-| `designer` | `@plan` |
-| `reviewer` | `@advisor` |
-| `security-reviewer` | `@advisor` |
-| `librarian` | `@smol` |
-| `task` | `@task` or a stronger implementation role |
-| `sonic` | `@tiny` or `@smol` |
+| `feature, refactoring` | `task` |
+| `bug-fix` | `task` |
+| `perf-issue` | `task` |
+| `hillclimb` | `task` |
+| `judgment and prose` | `pstack-judgment` |
+| `hardest tasks` | `pstack-hardest` |
+| `how explorer` | `scout` |
+| `how explainer` | `reviewer` |
+| `why investigators` | `librarian` |
+| `why synthesizer` | `reviewer` |
+| `reflect tooling` | `pstack-reflect-tooling` |
+| `reflect judgment, divergent, synthesizer` | `reviewer` |
+| `swarm workers` | `pstack-swarm-worker` |
+| `arena runners` | `pstack-runner-<N>` |
+| `architect runners` | `pstack-runner-<N>` |
+| `interrogate reviewers` | `pstack-runner-<N>` |
+| `arena cross-judge pool` | `pstack-judge-<N>` |
 
-These are recommendations, not task payload fields.
+Before each spawn for a config line, read `cfg://task/agentModelOverrides` and compare the agent's entry with the line's value, or with entry N for a panel line. If the entry is missing or differs, stop. Name the line, the agent, and both values, and tell the user to run `/setup-pstack`. A panel line with more entries than its three seats stops the same way. To run one model more than once, start its seat again.
+
+Lines that share an agent must name the same model and level, and the comparison enforces it. `inherit-parent` and `auto` are not valid values, because an override needs a concrete model.
+
+Send no `effort` on a spawn for a config line, because the override sets the level and `effort` would replace it. If a spawn fails, report the error. Never start the role on another agent or model. Report the resolved model when independence matters.
 
 ## Writing
 

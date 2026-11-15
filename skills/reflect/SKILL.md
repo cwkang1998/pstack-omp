@@ -24,9 +24,9 @@ That covers the session (`<timestamp>_<id>.jsonl`) and subagent (`<timestamp>_<i
 
 ## 2. Spawn three reviewers in parallel
 
-One message, three `task` calls, each in its lens's default role with MCP access. Reviewers need MCP access to look up the tickets, chat threads, and observability traces the transcript references, and a read-only mode that strips MCPs blocks that.
+One message, three `task` calls, each on the agent the Model routing section of the **pstack-omp** skill names for its lens's role line, with MCP access. Reviewers need MCP access to look up the tickets, chat threads, and observability traces the transcript references, and a read-only mode that strips MCPs blocks that.
 
-Each reviewer and the synthesizer name a role line in `$PSTACK_CONFIG (or .pstack/config.md)` and a default role. Spawn each in that role. OMP applies the line's value through its model settings, never a `model` field on the task, and runs the role's default model if the configuration or the line is missing. An `auto` or `inherit-parent` value means the parent model. Report the resolved model OMP returns for each child, and say so when it fell back from the configured choice. If the host task runner rejects a slug, use the default and say so. If it rejects the default, use the closest valid agent for that role from its error message. Set each child's reasoning effort for the job through the task runner's effort setting when the host exposes it, per the Delegation section of the **poteto-mode** skill.
+Each reviewer and the synthesizer name a role line in `$PSTACK_CONFIG (or .pstack/config.md)` and a default role. Start the agent the Model routing section of the **pstack-omp** skill names for that line, and use the role's default agent if the configuration or the line is missing. Report the resolved model OMP returns for each child. If that section's check stops a spawn, or the spawn fails, stop and report it. Set each child's reasoning effort for the job through the task runner's effort setting when the host exposes it, per the Delegation section of the **poteto-mode** skill.
 
 | Lens | Role line | Default role | Prompt template |
 |---|---|---|---|

@@ -10,7 +10,7 @@ Follow the [portable runtime contract](../pstack-omp/references/runtime.md) for 
 
 Investigate the motivation and intent behind code. The companion `how` skill answers what the code does and how it works. `why` answers what forces led to its shape.
 
-Each spawn below names a role line in `$PSTACK_CONFIG (or .pstack/config.md)` and a default role. Spawn it in that role. OMP applies the line's value through its model settings, never a `model` field on the task, and runs the role's default model if the configuration or the line is missing. An `auto` or `inherit-parent` value means the parent model. If the host task runner rejects a slug, use the default and say so. If it rejects the default, use the closest valid agent for that role from its error message. Set each child's reasoning effort for the job through the task runner's effort setting when the host exposes it, per the Delegation section of the **poteto-mode** skill.
+Each spawn below names a role line in `$PSTACK_CONFIG (or .pstack/config.md)` and a default role. Start the agent the Model routing section of the **pstack-omp** skill names for that line, and use the role's default agent if the configuration or the line is missing. If that section's check stops a spawn, or the spawn fails, stop and report it. Set each child's reasoning effort for the job through the task runner's effort setting when the host exposes it, per the Delegation section of the **poteto-mode** skill.
 
 Every spawn keeps MCP access. **Do not use a read-only mode that strips it.** That disables the MCP-backed investigators and the synthesizer's citation spot-checks. Investigators still shouldn't write anything.
 

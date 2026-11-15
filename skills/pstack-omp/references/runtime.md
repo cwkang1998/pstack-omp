@@ -28,9 +28,8 @@ child, review, transcript, or live check happened unless OMP reported it.
 | `mechanical` | Fully specified low-judgment edits. |
 
 Map these roles to OMP's bundled task agents (`scout`, `reviewer`,
-`security-reviewer`, `task`, `sonic`) and to the `planner`, `designer`, and
-`librarian` agents this package ships in `agents/`. The live `task` inventory
-wins over this document.
+`security-reviewer`, `task`, `sonic`) and to the agents this package ships in
+`agents/`. The live `task` inventory wins over this document.
 
 Every child brief must stand alone. It must name its goal, role, writable scope,
 acceptance criteria, verification command, forbidden scope, and report format. A
@@ -41,14 +40,15 @@ delegation and the active playbook requires it.
 
 Model inventory is not model delegation. OMP resolves a task agent's model
 through its settings (`modelRoles`, `task.agentModelOverrides`, the agent
-definition, and normal fallback), not through the task payload. Agent selection
-and model selection are separate decisions: do not put a `model` field in a task
-item and do not use a model alias as the `agent` value.
+definition, and normal fallback), not through the task payload. Do not put a
+`model` field in a task item and do not use a model alias as the `agent` value.
+Each config line runs on the agent the Model routing section of the
+`pstack-omp` skill names, and that agent's `task.agentModelOverrides` entry
+must equal the line's value, or the spawn stops.
 
-Use concrete `provider/model-id` values in configuration only when OMP's live
-model inventory reported them. `inherit-parent` runs a role on the parent chat
-model; a missing role entry means the OMP default. A panel is a list of role or
-model choices, and its size controls fan-out.
+Use concrete `provider/model-id:level` values in configuration only when OMP's
+live model inventory reported them. A missing line means the role's default
+agent. A panel is a list of up to three models, and its size controls fan-out.
 
 The optional configuration path is `$PSTACK_CONFIG`. If it is unset, use
 `.pstack/config.md` in the current project for project-local settings. Do not
