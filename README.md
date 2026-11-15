@@ -118,6 +118,11 @@ npm run sync:apply
 Protected adaptation changes require a human merge decision. The updater never
 silently overwrites them.
 
+`npm run verify` also checks the fork's own decisions, listed as
+`forkInvariants` and `routingRegressions` in `scripts/verify.mjs`. A sync that
+drops one of them, or brings back upstream wording that bypasses the model
+routing, fails before the update pull request opens.
+
 ## Development and verification
 
 ```bash

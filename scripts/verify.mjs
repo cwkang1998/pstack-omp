@@ -188,6 +188,54 @@ for (const path of markdownFiles) {
   }
 }
 
+// Upstream wording that would undo the fork's model routing if a sync brought it back.
+const routingRegressions = [
+  "use the default and say so",
+  "closest valid agent",
+  "closest valid slug",
+  "Subagents section",
+  "fast or standard speed",
+  "a different model after",
+  "omit `model`",
+  "run_in_background",
+  "readonly: true",
+  "pstack-models.mdc",
+  "high-fast",
+  "gemini-4-carbon",
+];
+for (const path of markdownFiles) {
+  const source = await readFile(path, "utf8");
+  for (const phrase of routingRegressions) {
+    if (source.includes(phrase)) {
+      failures.push(`${relative(root, path)} contains "${phrase}", which bypasses the fork's model routing`);
+    }
+  }
+}
+
+// Decisions the fork made on purpose. A sync that resolves a conflict toward upstream drops one of these.
+const forkInvariants = [
+  ["skills/pstack-omp/SKILL.md", "compare the agent's entry with the line's value", "the drift check before each config-line spawn"],
+  ["skills/pstack-omp/SKILL.md", "Send no `effort` on a spawn for a config line", "the rule that overrides set the level"],
+  ["skills/pstack-omp/SKILL.md", "Never start the role on another agent or model", "the fail-closed rule"],
+  ["skills/pstack-omp/SKILL.md", "write proc://<id>/kill", "OMP's live task tools"],
+  ["skills/poteto-mode/SKILL.md", "so send no effort setting for it", "the no-effort rule"],
+  ["skills/poteto-mode/playbooks/orchestrate.md", "Never retry on another model", "the no-model-switch retry rule"],
+  ["skills/setup-pstack/SKILL.md", "Then write `task.agentModelOverrides`", "setup writing the overrides"],
+  ["skills/setup-pstack/SKILL.md", "before_subagent_spawn", "setup's refusal rules"],
+  ["skills/arena/SKILL.md", "start entry N on its seat agent", "arena's seat routing"],
+  ["skills/arena/SKILL.md", "start entry N on its judge agent", "arena's judge routing"],
+  ["skills/architect/SKILL.md", "as the **arena** skill's Phase A step 3 says", "architect's seat routing"],
+  ["skills/swarm/SKILL.md", "names for the `swarm workers` line", "swarm's worker routing"],
+  ["skills/reflect/SKILL.md", "names for its lens's role line", "reflect's lens routing"],
+  ["README.md", "Protected adaptation changes require a human merge decision", "the README's sync wording"],
+];
+for (const [path, phrase, decision] of forkInvariants) {
+  const source = await readFile(join(root, path), "utf8").catch(() => "");
+  if (!source.includes(phrase)) {
+    failures.push(`${path} no longer has ${decision} ("${phrase}")`);
+  }
+}
+
 for (const path of skillFiles) {
   if (/^(<{7}|>{7}) /mu.test(await readFile(path, "utf8"))) {
     failures.push(`${relative(root, path)} contains unresolved merge conflict markers`);
