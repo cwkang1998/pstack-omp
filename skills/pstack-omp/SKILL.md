@@ -13,7 +13,8 @@ While this skill is active, its role map is the specific pstack execution contra
 
 Use the live host's configured names. This mapping targets OMP's bundled task
 agents plus the `planner`, `designer`, and `librarian` agents this package ships
-in `agents/`.
+in `agents/`. The package also ships one agent for each config line that cannot
+share an agent's model. Model routing maps config lines to agents.
 
 | Canonical role | OMP agent | Contract |
 |---|---|---|
@@ -39,6 +40,16 @@ security-reviewer
 librarian
 task
 sonic
+pstack-hardest
+pstack-judgment
+pstack-reflect-tooling
+pstack-swarm-worker
+pstack-runner-1
+pstack-runner-2
+pstack-runner-3
+pstack-judge-1
+pstack-judge-2
+pstack-judge-3
 ```
 
 A canonically routed task item's `agent` value must be one of those names. Canonical role labels and model aliases are not agent names.
@@ -225,21 +236,35 @@ The root resolves a child question and sends the answer through `write agent://<
 
 ## Model routing
 
-A role's model comes from its line in `$PSTACK_CONFIG` (or `.pstack/config.md`). Start the role's mapped agent with the line's value in the task item's `model` field. The `:level` suffix sets the effort, so put an adjusted level there and not in `effort`. For `inherit-parent` or `auto`, put the parent's own `provider/model-id`. A role with no line sends no `model`, and the agent runs on its own default.
+pstack never names a model on a task call. Each agent runs on its `task.agentModelOverrides` entry, which `/setup-pstack` writes from `$PSTACK_CONFIG` (or `.pstack/config.md`). Do not put a `model` field in a task item, and do not use a model alias as the `agent` value.
 
-A `model` needs `task.perCallModel: on`, a `modelRoles` entry that names the model, and no `task.agentModelOverrides` entry for the agent. A per-call spawn never switches models: an unavailable model or missing credentials fails it. If OMP refuses or fails the spawn, stop. Tell the user which setting, role, or model is missing, and do not start the role on another model or another agent.
+A spawn for a config line starts the agent below. Entry N of a panel line starts seat agent N. A role with no config line uses the canonical role map.
 
-Do not use a model alias as the `agent` value. Report the actual resolved model when independence matters.
-
-An agent started with no `model` runs on the role its own definition names. On OMP 18.20.2 those were:
-
-| `modelRoles` entry | Agents |
+| Config line | Agent |
 |---|---|
-| `task` | `task` |
-| `smol` | `scout`, `sonic`, `librarian` |
-| `plan` | `planner`, `designer` |
-| `slow` | `reviewer` |
-| `default` | `security-reviewer`, and every agent above whose role is unset |
+| `feature, refactoring` | `task` |
+| `bug-fix` | `task` |
+| `perf-issue` | `task` |
+| `hillclimb` | `task` |
+| `judgment and prose` | `pstack-judgment` |
+| `hardest tasks` | `pstack-hardest` |
+| `how explorer` | `scout` |
+| `how explainer` | `reviewer` |
+| `why investigators` | `librarian` |
+| `why synthesizer` | `reviewer` |
+| `reflect tooling` | `pstack-reflect-tooling` |
+| `reflect judgment, divergent, synthesizer` | `reviewer` |
+| `swarm workers` | `pstack-swarm-worker` |
+| `arena runners` | `pstack-runner-<N>` |
+| `architect runners` | `pstack-runner-<N>` |
+| `interrogate reviewers` | `pstack-runner-<N>` |
+| `arena cross-judge pool` | `pstack-judge-<N>` |
+
+Before each spawn for a config line, read `cfg://task/agentModelOverrides` and compare the agent's entry with the line's value, or with entry N for a panel line. If the entry is missing or differs, stop. Name the line, the agent, and both values, and tell the user to run `/setup-pstack`. A panel line with more entries than its three seats stops the same way. To run one model more than once, start its seat again.
+
+Lines that share an agent must name the same model and level, and the comparison enforces it. `inherit-parent` and `auto` are not valid values, because an override needs a concrete model.
+
+If a spawn fails, report the error. Never start the role on another agent or model. Report the resolved model when independence matters.
 
 ## Writing
 

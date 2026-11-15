@@ -10,7 +10,7 @@ Follow the [portable runtime contract](../pstack-omp/references/runtime.md) for 
 
 Explore the codebase to answer "how does X work?" questions. Produce architectural explanations at the level of a senior engineer onboarding onto a subsystem, enough to build a working mental model, not so much that it reads like annotated source code.
 
-Every spawn is a read-only host task runner subagent. Explorers use the `how explorer` line in `$PSTACK_CONFIG (or .pstack/config.md)` (default role `explorer`), and every explainer uses the `how explainer` line (default role `synthesizer`). Spawn each in its default role. Route the line's value per the Model routing section of the **pstack-omp** skill, and run the role's default model if the configuration or the line is missing. An `auto` or `inherit-parent` value means the parent model. If the host task runner rejects the model, stop and report it, per that section. Set each child's reasoning effort for the job through the task runner's effort setting when the host exposes it, per the Delegation section of the **poteto-mode** skill.
+Every spawn is a read-only host task runner subagent. Explorers use the `how explorer` line in `$PSTACK_CONFIG (or .pstack/config.md)` (default role `explorer`), and every explainer uses the `how explainer` line (default role `synthesizer`). Start the agent the Model routing section of the **pstack-omp** skill names for each line, and use the role's default agent if the configuration or the line is missing. If that section's check stops a spawn, or the spawn fails, stop and report it. Set each child's reasoning effort for the job through the task runner's effort setting when the host exposes it, per the Delegation section of the **poteto-mode** skill.
 
 ## 1. Assess complexity
 

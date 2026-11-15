@@ -214,7 +214,23 @@ for (const entry of await readdir(join(root, "agents"))) {
 const adapterPath = join(skillsRoot, "pstack-omp", "SKILL.md");
 const adapter = await readFile(adapterPath, "utf8");
 const roster = adapter.match(/The reference roster is closed:\n\n```text\n([\s\S]*?)\n```/u)?.[1];
-const mappedAgents = [...adapter.matchAll(/^\| `[a-z]+` \| `([a-z-]+)` \|/gmu)].map((match) => match[1]);
+const PANEL_SEATS = 3;
+const lineAgents = new Map(
+  [...adapter.matchAll(/^\| `([a-z ,]+)` \| `([a-z<>N-]+)` \|$/gmu)].map((match) => [match[1], match[2]]),
+);
+const mappedAgents = [
+  ...[...adapter.matchAll(/^\| `[a-z]+` \| `([a-z-]+)` \|/gmu)].map((match) => match[1]),
+  ...[...lineAgents.values()].flatMap((agent) =>
+    agent.includes("<N>") ? Array.from({ length: PANEL_SEATS }, (_, i) => agent.replace("<N>", String(i + 1))) : [agent],
+  ),
+];
+const setupPath = join(skillsRoot, "setup-pstack", "SKILL.md");
+const configShape = (await readFile(setupPath, "utf8")).match(/^```\n# pstack model configuration[\s\S]*?\n```/mu)?.[0] ?? "";
+for (const [, line] of configShape.matchAll(/^([a-z][a-z ,]*): /gmu)) {
+  if (!lineAgents.has(line)) {
+    failures.push(`${relative(root, adapterPath)} has no Model routing row for the ${line} line in ${relative(root, setupPath)}`);
+  }
+}
 if (!roster) failures.push(`${relative(root, adapterPath)} is missing the closed agent roster`);
 for (const agent of new Set([...(roster?.split("\n") ?? []), ...mappedAgents])) {
   if (!ompBundledAgents.has(agent) && !packageAgents.has(agent)) {
