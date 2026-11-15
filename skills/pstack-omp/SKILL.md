@@ -12,8 +12,8 @@ While this skill is active, its role map is the specific pstack execution contra
 ## Canonical role map
 
 Use the live host's configured names. This mapping targets OMP's bundled task
-agents plus the `planner`, `designer`, `librarian`, and `pstack-worker` agents
-this package ships in `agents/`.
+agents plus the `planner`, `designer`, and `librarian` agents this package ships
+in `agents/`.
 
 | Canonical role | OMP agent | Contract |
 |---|---|---|
@@ -39,7 +39,6 @@ security-reviewer
 librarian
 task
 sonic
-pstack-worker
 ```
 
 A canonically routed task item's `agent` value must be one of those names. Canonical role labels and model aliases are not agent names.
@@ -228,24 +227,19 @@ The root resolves a child question and sends the answer through `write agent://<
 
 A role's model comes from its line in `$PSTACK_CONFIG` (or `.pstack/config.md`). Start the role's mapped agent with the line's value in the task item's `model` field. The `:level` suffix sets the effort, so put an adjusted level there and not in `effort`. For `inherit-parent` or `auto`, put the parent's own `provider/model-id`. A role with no line sends no `model`, and the agent runs on its own default.
 
-OMP refuses `model` for an agent listed in `task.agentModelOverrides`, which you can read at `cfg://task/agentModelOverrides`. When the mapped agent is listed there with another value, start `pstack-worker` with the same `model`, and name the canonical role in the brief's ROLE section. When its entry is the line's value, start the mapped agent with no `model`.
-
-A `model` needs `task.perCallModel: on` and a `modelRoles` entry that names the model. If OMP refuses the spawn, start the mapped agent with no `model`, tell the user what is missing, and never retry on another model.
+A `model` needs `task.perCallModel: on`, a `modelRoles` entry that names the model, and no `task.agentModelOverrides` entry for the agent. A per-call spawn never switches models: an unavailable model or missing credentials fails it. If OMP refuses or fails the spawn, stop. Tell the user which setting, role, or model is missing, and do not start the role on another model or another agent.
 
 Do not use a model alias as the `agent` value. Report the actual resolved model when independence matters.
 
-An agent started with no `model` runs on its own default. Set those defaults through `modelRoles`, and leave `task.agentModelOverrides` empty so that every agent accepts a per-call model. Recommended roles:
+An agent started with no `model` runs on the role its own definition names. On OMP 18.20.2 those were:
 
-| OMP agent | Recommendation |
+| `modelRoles` entry | Agents |
 |---|---|
-| `scout` | `@smol` |
-| `planner` | `@plan` |
-| `designer` | `@plan` |
-| `reviewer` | `@advisor` |
-| `security-reviewer` | `@advisor` |
-| `librarian` | `@smol` |
-| `task` | `@task` or a stronger implementation role |
-| `sonic` | `@tiny` or `@smol` |
+| `task` | `task` |
+| `smol` | `scout`, `sonic`, `librarian` |
+| `plan` | `planner`, `designer` |
+| `slow` | `reviewer` |
+| `default` | `security-reviewer`, and every agent above whose role is unset |
 
 ## Writing
 

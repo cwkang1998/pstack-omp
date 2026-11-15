@@ -28,8 +28,8 @@ child, review, transcript, or live check happened unless OMP reported it.
 | `mechanical` | Fully specified low-judgment edits. |
 
 Map these roles to OMP's bundled task agents (`scout`, `reviewer`,
-`security-reviewer`, `task`, `sonic`) and to the `planner`, `designer`,
-`librarian`, and `pstack-worker` agents this package ships in `agents/`. The
+`security-reviewer`, `task`, `sonic`) and to the `planner`, `designer`, and
+`librarian` agents this package ships in `agents/`. The
 live `task` inventory wins over this document.
 
 Every child brief must stand alone. It must name its goal, role, writable scope,
@@ -42,9 +42,8 @@ delegation and the active playbook requires it.
 Model inventory is not model delegation. OMP resolves a task agent's model
 through its settings (`modelRoles`, `task.agentModelOverrides`, the agent
 definition, and normal fallback). A role runs on its mapped agent with the
-role's model in the task item's `model` field. `pstack-worker` takes the role
-only when the mapped agent has a `task.agentModelOverrides` entry, because OMP
-then refuses the field. The Model routing section of the `pstack-omp` skill has
+role's model in the task item's `model` field, and the spawn fails when OMP
+cannot run that model. The Model routing section of the `pstack-omp` skill has
 the rule. Do not use a model alias as the `agent` value.
 
 Use concrete `provider/model-id` values in configuration only when OMP's live
