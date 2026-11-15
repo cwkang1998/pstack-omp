@@ -26,7 +26,7 @@ Open a todolist with one entry per phase before launching anything.
 
 ## Phase B: Fan out
 
-Spawn all N workers in one message in the canonical `implementer` role. For a model race, route each arm through an agent whose configured model differs, per the Model routing section of the **pstack-omp** skill, check each returned model identity, and report a capability gap when routing cannot realize the race. Set `isolated: true` when the task runner exposes `isolated`. Otherwise give each writer its own worktree or output path, or report that isolation is unavailable. Use `isolated: false` only when the worker needs access to something in the user's live checkout.
+Spawn all N workers in one message on the agent the Model routing section of the **pstack-omp** skill names for the `swarm workers` line. For a model race, start each arm on a runner seat whose override names its model, per the same section, check each returned model identity, and stop when no seat runs a model the race needs. Set `isolated: true` when the task runner exposes `isolated`. Otherwise give each writer its own worktree or output path, or report that isolation is unavailable. Use `isolated: false` only when the worker needs access to something in the user's live checkout.
 
 When a worker must start from a non-default pushed branch, name that branch in its brief.
 

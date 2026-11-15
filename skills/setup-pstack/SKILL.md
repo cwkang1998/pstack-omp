@@ -49,7 +49,7 @@ Every real model written must be in the detected set. If a chosen real model is 
 Write `$PSTACK_CONFIG (or .pstack/config.md)` with a `# budget` line with the chosen label and its target effort, and one line per role, using the same labels poteto-mode uses. Overwrite the whole file so re-runs stay idempotent. Each `<role-model>` default is the model OMP resolves for the agent that role maps to in the `pstack-omp` role map. Shape:
 
 ```
-# pstack model configuration. One line per role. Delete a line to fall back to the skill default.
+# pstack model configuration. One line per role. A role with no line runs on its default agent's override.
 # Each line runs on the agent the pstack-omp Model routing section names. /setup-pstack writes that agent's task.agentModelOverrides entry.
 # budget: large (xhigh)
 feature, refactoring: <implementer-model>:xhigh
@@ -75,7 +75,7 @@ Then write `task.agentModelOverrides` in the global OMP config, preserving unrel
 
 ### 6. Confirm
 
-Tell the user the config was written and that it applies to new sessions. Re-running this skill updates it. If the session lacks per-child model selection, report that no role configuration was written or activated. Tell the user which model is active and how to switch it.
+Tell the user the config and the overrides were written and that they apply to new sessions. Re-running this skill updates both. If the session cannot write the global OMP config, report that no override was written, so every spawn for a config line will stop until one is. Tell the user which model is active and how to switch it.
 
 ### 7. Offer a verification skill (optional)
 

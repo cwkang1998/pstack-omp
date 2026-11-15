@@ -264,7 +264,7 @@ Before each spawn for a config line, read `cfg://task/agentModelOverrides` and c
 
 Lines that share an agent must name the same model and level, and the comparison enforces it. `inherit-parent` and `auto` are not valid values, because an override needs a concrete model.
 
-If a spawn fails, report the error. Never start the role on another agent or model. Report the resolved model when independence matters.
+Send no `effort` on a spawn for a config line, because the override sets the level and `effort` would replace it. If a spawn fails, report the error. Never start the role on another agent or model. Report the resolved model when independence matters.
 
 ## Writing
 
