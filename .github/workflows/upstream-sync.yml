@@ -29,11 +29,27 @@ jobs:
       - name: Apply safe upstream update
         run: node scripts/sync-upstream.mjs --apply
 
+      - name: Validate plugin manifest
+        run: npm run validate
+
       - name: Verify package
         run: npm run verify
 
+      # A new upstream skill needs a README row that only a person can write, so a docs failure opens a draft
+      # pull request to add it on instead of failing the run.
+      - name: Check docs
+        id: docs
+        continue-on-error: true
+        shell: bash
+        run: npm run -s check:docs 2>&1 | tee "$RUNNER_TEMP/docs-check.txt"
+
       - name: Test updater
         run: npm run test:sync
+
+      - name: Test skill scripts
+        run: |
+          npm install --no-save --prefix skills/statechart/scripts
+          npm run test:skills
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
@@ -46,15 +62,30 @@ jobs:
           bun install --cwd skills/statechart-dashboard/scripts --frozen-lockfile
           bun test skills/statechart-dashboard/scripts
 
+      - name: Write pull request body
+        shell: bash
+        run: |
+          {
+            echo "Automated update from the pinned authoritative Cursor pstack source."
+            echo
+            echo "The updater three-way merges OMP adaptations with upstream and fails"
+            echo "before opening a pull request when they conflict."
+            if [ "${{ steps.docs.outcome }}" = failure ]; then
+              echo
+              echo "The docs check failed. Fix README.md on this branch before merging:"
+              echo
+              echo '```text'
+              cat "$RUNNER_TEMP/docs-check.txt"
+              echo '```'
+            fi
+          } > "$RUNNER_TEMP/pr-body.md"
+
       - name: Open update pull request
         uses: peter-evans/create-pull-request@v7
         with:
           commit-message: "chore: sync upstream pstack"
           title: "chore: sync upstream pstack"
-          body: |
-            Automated update from the pinned authoritative Cursor pstack source.
-
-            The updater three-way merges OMP adaptations with upstream and fails
-            before opening a pull request when they conflict.
+          body-path: ${{ runner.temp }}/pr-body.md
+          draft: ${{ steps.docs.outcome == 'failure' && 'always-true' || 'false' }}
           branch: automation/upstream-pstack
           delete-branch: true
