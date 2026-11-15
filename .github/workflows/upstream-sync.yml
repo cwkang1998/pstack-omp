@@ -72,10 +72,10 @@ jobs:
             echo "before opening a pull request when they conflict."
             if [ "${{ steps.docs.outcome }}" = failure ]; then
               echo
-              echo "README.md does not match the synced tree yet. Fix these on this branch before merging:"
+              echo "The docs check failed. Fix README.md on this branch before merging:"
               echo
               echo '```text'
-              grep '^FAIL' "$RUNNER_TEMP/docs-check.txt"
+              cat "$RUNNER_TEMP/docs-check.txt"
               echo '```'
             fi
           } > "$RUNNER_TEMP/pr-body.md"
@@ -86,6 +86,6 @@ jobs:
           commit-message: "chore: sync upstream pstack"
           title: "chore: sync upstream pstack"
           body-path: ${{ runner.temp }}/pr-body.md
-          draft: ${{ steps.docs.outcome == 'failure' }}
+          draft: ${{ steps.docs.outcome == 'failure' && 'always-true' || 'false' }}
           branch: automation/upstream-pstack
           delete-branch: true

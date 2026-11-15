@@ -42,21 +42,25 @@ if (typeof manifest.version !== "string" || !SEMVER.test(manifest.version)) {
 if (manifest.omp === null || typeof manifest.omp !== "object" || Array.isArray(manifest.omp)) {
   fail("package.json has no omp manifest, so OMP loads nothing from this package");
 } else {
-  // OMP reads paths from string and array fields, feature entries included, and documents no field list, so check
-  // every relative path anywhere in the manifest.
-  const checkPaths = (value, at) => {
-    if (typeof value === "string") {
-      if (!/^\.\.?\//.test(value)) return;
-      const path = resolve(root, value);
-      if (relative(root, path).startsWith("..")) fail(`package.json ${at} "${value}" points outside the package`);
-      else if (!existsSync(path)) fail(`package.json ${at} "${value}" does not exist`);
-    } else if (Array.isArray(value)) {
-      value.forEach((entry, index) => checkPaths(entry, `${at}[${index}]`));
-    } else if (value !== null && typeof value === "object") {
-      for (const [key, entry] of Object.entries(value)) checkPaths(entry, `${at}.${key}`);
+  // The manifest fields OMP resolves to files or directories, at the top level and in each optional feature.
+  const PATH_FIELDS = ["extensions", "skills", "tools", "hooks", "commands"];
+  const checkPaths = (fields, at) => {
+    for (const field of PATH_FIELDS) {
+      if (fields[field] === undefined) continue;
+      const entries = Array.isArray(fields[field]) ? fields[field] : [fields[field]];
+      entries.forEach((entry, index) => {
+        const label = `${at}.${field}${Array.isArray(fields[field]) ? `[${index}]` : ""}`;
+        if (typeof entry !== "string") return fail(`package.json ${label} is not a path`);
+        const path = resolve(root, entry);
+        if (relative(root, path).startsWith("..")) fail(`package.json ${label} "${entry}" points outside the package`);
+        else if (!existsSync(path)) fail(`package.json ${label} "${entry}" does not exist`);
+      });
     }
   };
   checkPaths(manifest.omp, "omp");
+  for (const [name, feature] of Object.entries(manifest.omp.features ?? {})) {
+    if (feature !== null && typeof feature === "object") checkPaths(feature, `omp.features.${name}`);
+  }
 }
 
 if (errors > 0) {
