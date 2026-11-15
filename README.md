@@ -115,8 +115,8 @@ npm run sync:apply -- --dry-run
 npm run sync:apply
 ```
 
-Conflicting adaptations need a human merge decision. `npm run verify` fails while
-any conflict marker remains, so the updater never silently overwrites them.
+Protected adaptation changes require a human merge decision. The updater never
+silently overwrites them.
 
 ## Development and verification
 
