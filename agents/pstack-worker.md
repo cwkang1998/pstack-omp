@@ -1,6 +1,6 @@
 ---
 name: pstack-worker
-description: "pstack delegate for a role whose configured model its usual agent does not run. Runs one standalone brief on the model its caller names."
+description: "pstack delegate for a role whose mapped agent cannot take a per-call model. Runs one standalone brief on the model its caller names."
 tools:
   - read
   - grep

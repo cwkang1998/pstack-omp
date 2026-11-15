@@ -73,10 +73,10 @@ $setup-pstack
 It detects the models and task agents your OMP session actually exposes, lets
 you choose the defaults for implementation and review work, and writes concrete
 `provider/model-id` assignments to `.pstack/config.md` (or to `$PSTACK_CONFIG`
-when set). Each agent's own model lives in OMP settings
-(`task.agentModelOverrides`). A role whose configured model its agent does not
-run goes to `pstack-worker`, with the model named in the task call. That needs
-`task.perCallModel: on` and a `modelRoles` entry that names the model.
+when set). Each role runs on its mapped agent, with that model named in the task
+call. That needs `task.perCallModel: on` and a `modelRoles` entry that names
+each model. Leave `task.agentModelOverrides` empty, because OMP refuses a
+per-call model for any agent listed there.
 
 Then route your first real task through the main workflow:
 

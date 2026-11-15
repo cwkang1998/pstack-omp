@@ -41,10 +41,11 @@ delegation and the active playbook requires it.
 
 Model inventory is not model delegation. OMP resolves a task agent's model
 through its settings (`modelRoles`, `task.agentModelOverrides`, the agent
-definition, and normal fallback). A role runs on its mapped agent when that
-agent already runs the role's model. Otherwise it runs on `pstack-worker` with
-the model in the task item's `model` field. The Model routing section of the
-`pstack-omp` skill has the rule. Do not use a model alias as the `agent` value.
+definition, and normal fallback). A role runs on its mapped agent with the
+role's model in the task item's `model` field. `pstack-worker` takes the role
+only when the mapped agent has a `task.agentModelOverrides` entry, because OMP
+then refuses the field. The Model routing section of the `pstack-omp` skill has
+the rule. Do not use a model alias as the `agent` value.
 
 Use concrete `provider/model-id` values in configuration only when OMP's live
 model inventory reported them. `inherit-parent` runs a role on the parent chat

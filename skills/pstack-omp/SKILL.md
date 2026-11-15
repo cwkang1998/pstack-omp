@@ -226,16 +226,15 @@ The root resolves a child question and sends the answer through `write agent://<
 
 ## Model routing
 
-A role's model comes from its line in `$PSTACK_CONFIG` (or `.pstack/config.md`). An agent's own model comes from `task.agentModelOverrides`, which you can read at `cfg://task/agentModelOverrides`. OMP refuses a task item's `model` field for any agent listed there.
+A role's model comes from its line in `$PSTACK_CONFIG` (or `.pstack/config.md`). Start the role's mapped agent with the line's value in the task item's `model` field. The `:level` suffix sets the effort, so put an adjusted level there and not in `effort`. For `inherit-parent` or `auto`, put the parent's own `provider/model-id`. A role with no line sends no `model`, and the agent runs on its own default.
 
-- **The mapped agent already runs the line's model, or the role has no line.** Start the mapped agent. If only the level differs, set `effort`. `lo`, `med`, and `hi` select the lowest, middle, and highest level the model supports, so a level between those goes to the next case.
-- **Anything else.** Start `pstack-worker` with the line's value in `model`, and name the canonical role in the brief's ROLE section. For `inherit-parent` or `auto`, put the parent's own `provider/model-id` there.
+OMP refuses `model` for an agent listed in `task.agentModelOverrides`, which you can read at `cfg://task/agentModelOverrides`. When the mapped agent is listed there with another value, start `pstack-worker` with the same `model`, and name the canonical role in the brief's ROLE section. When its entry is the line's value, start the mapped agent with no `model`.
 
-A `model` needs `task.perCallModel: on` and a `modelRoles` entry that names the model. `effort` needs `task.enableEffort: true`. If OMP refuses the spawn, start the mapped agent without them, tell the user what is missing, and never retry on another model.
+A `model` needs `task.perCallModel: on` and a `modelRoles` entry that names the model. If OMP refuses the spawn, start the mapped agent with no `model`, tell the user what is missing, and never retry on another model.
 
 Do not use a model alias as the `agent` value. Report the actual resolved model when independence matters.
 
-Recommended defaults for each agent's own model, set in `task.agentModelOverrides` or `modelRoles`:
+An agent started with no `model` runs on its own default. Set those defaults through `modelRoles`, and leave `task.agentModelOverrides` empty so that every agent accepts a per-call model. Recommended roles:
 
 | OMP agent | Recommendation |
 |---|---|
@@ -247,8 +246,6 @@ Recommended defaults for each agent's own model, set in `task.agentModelOverride
 | `librarian` | `@smol` |
 | `task` | `@task` or a stronger implementation role |
 | `sonic` | `@tiny` or `@smol` |
-
-Leave `pstack-worker` out of `task.agentModelOverrides`, or OMP refuses every per-call model for it.
 
 ## Writing
 
