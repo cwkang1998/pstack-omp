@@ -28,10 +28,9 @@ child, review, transcript, or live check happened unless OMP reported it.
 | `mechanical` | Fully specified low-judgment edits. |
 
 Map these roles to OMP's bundled task agents (`scout`, `reviewer`,
-`security-reviewer`, `task`, `sonic`) and to the `planner`, `designer`, and
-`librarian` agents this package ships in `agents/`. The package's
-`pstack-worker` and `pstack-reader` carriers run a role on a model its mapped
-agent does not run. The live `task` inventory wins over this document.
+`security-reviewer`, `task`, `sonic`) and to the `planner`, `designer`,
+`librarian`, and `pstack-worker` agents this package ships in `agents/`. The
+live `task` inventory wins over this document.
 
 Every child brief must stand alone. It must name its goal, role, writable scope,
 acceptance criteria, verification command, forbidden scope, and report format. A
@@ -43,10 +42,9 @@ delegation and the active playbook requires it.
 Model inventory is not model delegation. OMP resolves a task agent's model
 through its settings (`modelRoles`, `task.agentModelOverrides`, the agent
 definition, and normal fallback). A role runs on its mapped agent when that
-agent's override already names the role's model. Otherwise it runs on a carrier
-with the model in the task item's `model` field. The Model routing section of
-the `pstack-omp` skill gives the exact steps. Do not use a model alias as the
-`agent` value.
+agent already runs the role's model. Otherwise it runs on `pstack-worker` with
+the model in the task item's `model` field. The Model routing section of the
+`pstack-omp` skill has the rule. Do not use a model alias as the `agent` value.
 
 Use concrete `provider/model-id` values in configuration only when OMP's live
 model inventory reported them. `inherit-parent` runs a role on the parent chat

@@ -12,10 +12,8 @@ While this skill is active, its role map is the specific pstack execution contra
 ## Canonical role map
 
 Use the live host's configured names. This mapping targets OMP's bundled task
-agents plus the `planner`, `designer`, and `librarian` agents this package ships
-in `agents/`. The package also ships two carrier agents, `pstack-worker` and
-`pstack-reader`, which run a role on a model its mapped agent does not run. See
-Model routing.
+agents plus the `planner`, `designer`, `librarian`, and `pstack-worker` agents
+this package ships in `agents/`.
 
 | Canonical role | OMP agent | Contract |
 |---|---|---|
@@ -42,7 +40,6 @@ librarian
 task
 sonic
 pstack-worker
-pstack-reader
 ```
 
 A canonically routed task item's `agent` value must be one of those names. Canonical role labels and model aliases are not agent names.
@@ -229,28 +226,12 @@ The root resolves a child question and sends the answer through `write agent://<
 
 ## Model routing
 
-OMP resolves a task agent through its current settings, including `modelRoles`, `task.agentModelOverrides`, the agent definition, and normal fallback. Agent selection and model selection are separate decisions.
+A role's model comes from its line in `$PSTACK_CONFIG` (or `.pstack/config.md`). An agent's own model comes from `task.agentModelOverrides`, which you can read at `cfg://task/agentModelOverrides`. OMP refuses a task item's `model` field for any agent listed there.
 
-A role's model comes from its line in `$PSTACK_CONFIG` (or `.pstack/config.md`). OMP fixes each agent's model in `task.agentModelOverrides` and refuses a task item's `model` field for any agent with an entry there. Route each spawn in this order:
+- **The mapped agent already runs the line's model, or the role has no line.** Start the mapped agent. If only the level differs, set `effort`. `lo`, `med`, and `hi` select the lowest, middle, and highest level the model supports, so a level between those goes to the next case.
+- **Anything else.** Start `pstack-worker` with the line's value in `model`, and name the canonical role in the brief's ROLE section. For `inherit-parent` or `auto`, put the parent's own `provider/model-id` there.
 
-1. A missing line keeps the mapped agent and sends no `model` or `effort`.
-2. A line of `inherit-parent` or `auto` starts the carrier with the parent's own `provider/model-id` in `model`.
-3. For a real `provider/model-id:level`, read `cfg://task/agentModelOverrides`. When the mapped agent's entry names the same `provider/model-id`, start the mapped agent with no `model`:
-   - If the level matches the entry, send no `effort`.
-   - Otherwise send `effort` when it reaches the level. `lo`, `med`, and `hi` select the lowest, middle, and highest level the model supports. On `anthropic/claude-opus-5-5`, which supports `low` to `max`, they ran at `low`, `high`, and `max`.
-   - Any other level goes to step 4.
-4. Otherwise start the carrier with the line's value in `model`. The `:level` suffix sets its effort.
-
-The carrier depends on what the role may do:
-
-| Roles | Carrier |
-|---|---|
-| `planner`, `designer`, `implementer`, `owner`, `mechanical`, and every panel seat that writes, such as arena and architect runners and interrogate adversaries | `pstack-worker` |
-| `explorer`, `watcher`, `reviewer`, `researcher`, `synthesizer`, and arena's cross-judge | `pstack-reader` |
-
-A carrier's brief names the canonical role it fills in its ROLE section, because the carrier has no specialist prompt of its own.
-
-A `model` needs `task.perCallModel: on` and a chat role in the operator's `modelRoles` that names the model. An `effort` needs `task.enableEffort: true`. When OMP refuses a spawn for one of these, start the mapped agent with no `model` or `effort`, and tell the user which setting or role is missing. `/setup-pstack` adds them. A per-call worker never falls back to another model, so an unavailable model fails the spawn. Report that failure and do not retry silently on another model.
+A `model` needs `task.perCallModel: on` and a `modelRoles` entry that names the model. `effort` needs `task.enableEffort: true`. If OMP refuses the spawn, start the mapped agent without them, tell the user what is missing, and never retry on another model.
 
 Do not use a model alias as the `agent` value. Report the actual resolved model when independence matters.
 
@@ -267,7 +248,7 @@ Recommended defaults for each agent's own model, set in `task.agentModelOverride
 | `task` | `@task` or a stronger implementation role |
 | `sonic` | `@tiny` or `@smol` |
 
-Leave `pstack-worker` and `pstack-reader` out of `task.agentModelOverrides`. An entry there makes OMP refuse every per-call model for that carrier.
+Leave `pstack-worker` out of `task.agentModelOverrides`, or OMP refuses every per-call model for it.
 
 ## Writing
 

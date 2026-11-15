@@ -13,7 +13,7 @@ Write `$PSTACK_CONFIG (or .pstack/config.md)`, the config file that sets pstack'
 
 ### 1. Detect available models
 
-Enumerate the `provider/model-id` models OMP routes task agents to in this session, from `modelRoles` and `task.agentModelOverrides`. That is the dependable source. If `omp models` lists the user's available models, prefer it for completeness. If you cannot detect any, ask the user to paste the models they have access to. Never write a real model you have not confirmed is available. A role can run a model its mapped agent does not run, because a carrier agent takes the model per call. The Model routing section of the **pstack-omp** skill covers this. `inherit-parent` and `auto` are valid only when OMP can pass the current model to a child.
+Enumerate the `provider/model-id` models OMP routes task agents to in this session, from `modelRoles` and `task.agentModelOverrides`. That is the dependable source. If `omp models` lists the user's available models, prefer it for completeness. If you cannot detect any, ask the user to paste the models they have access to. Never write a real model you have not confirmed is available. A role can name a model its mapped agent does not run, because `pstack-worker` then runs it per call. `inherit-parent` and `auto` are valid only when OMP can pass the current model to a child.
 
 ### 2. Load current state
 
@@ -36,12 +36,7 @@ If the live session exposes models but no usable task facility, stop model mappi
 
 ### 4. Validate
 
-Every real model written must be in the detected set. Role aliases pass only when the host task facility documents those aliases. If a chosen real model is not available, stop and ask again. Then check what the Model routing section of the **pstack-omp** skill needs for each role:
-
-- A role whose model differs from its mapped agent's `task.agentModelOverrides` entry runs per call. It needs `task.perCallModel: on` and a chat role in `modelRoles` that names the model. Prefer a chat role that already names it. Otherwise ask which chat role may take it, and say what that role runs today. An `inherit-parent` or `auto` value also runs per call and needs `task.perCallModel: on`, but OMP already approves the parent's own model.
-- A role on its mapped agent's model at another level needs `task.enableEffort: true`. When the level is not the model's lowest, middle, or highest, it runs per call instead and needs the per-call settings above.
-
-List each missing setting or role and write it to the global OMP config only after the user approves.
+Every real model written must be in the detected set. Role aliases pass only when the host task facility documents those aliases. If a chosen real model is not available, stop and ask again. A role whose model its mapped agent does not run needs `task.perCallModel: on` and a `modelRoles` entry that names the model, per the Model routing section of the **pstack-omp** skill. A role that only changes its agent's level needs `task.enableEffort: true`. List what is missing and write it to the global OMP config only after the user approves.
 
 ### 5. Write the config
 
@@ -70,7 +65,7 @@ architect runners: <planner-model>:xhigh, <implementer-model>:xhigh
 interrogate reviewers: <planner-model>:xhigh, <implementer-model>:xhigh
 ```
 
-Leave `task.agentModelOverrides` alone unless the user asks to change an agent's own default model. Roles that map to one agent may name different models, because a carrier runs each role whose model differs from its agent's. Write the settings and roles step 4 approved, preserving unrelated keys.
+Leave `task.agentModelOverrides` alone unless the user asks to change an agent's own default model. Roles that map to one agent may still name different models. Write the settings and roles step 4 approved, preserving unrelated keys.
 
 ### 6. Confirm
 

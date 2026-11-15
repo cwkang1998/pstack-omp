@@ -55,9 +55,8 @@ needs delegation or OMP-specific lifecycle behavior.
 
 The runtime adapter maps canonical pstack roles to OMP's bundled task agents
 (`scout`, `reviewer`, `security-reviewer`, `task`, `sonic`) and to the
-`planner`, `designer`, and `librarian` agents this package ships in `agents/`.
-The package also ships two carriers, `pstack-worker` and `pstack-reader`. They
-run a role on a model its usual agent does not run.
+`planner`, `designer`, `librarian`, and `pstack-worker` agents this package
+ships in `agents/`.
 Missing integrations are reported honestly and fail closed; for
 example, Benny requires an available Slack/tracker/control adapter rather than
 pretending those tools exist.
@@ -75,11 +74,9 @@ It detects the models and task agents your OMP session actually exposes, lets
 you choose the defaults for implementation and review work, and writes concrete
 `provider/model-id` assignments to `.pstack/config.md` (or to `$PSTACK_CONFIG`
 when set). Each agent's own model lives in OMP settings
-(`task.agentModelOverrides`). A role whose configured model differs from its
-agent's runs on a carrier, with the model named in the task call. That needs
-`task.perCallModel: on` and a `modelRoles` entry that names the model. A role
-that only changes the level needs `task.enableEffort: true`. The setup skill
-checks these and asks before it changes them.
+(`task.agentModelOverrides`). A role whose configured model its agent does not
+run goes to `pstack-worker`, with the model named in the task call. That needs
+`task.perCallModel: on` and a `modelRoles` entry that names the model.
 
 Then route your first real task through the main workflow:
 
