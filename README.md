@@ -118,11 +118,6 @@ npm run sync:apply
 Protected adaptation changes require a human merge decision. The updater never
 silently overwrites them.
 
-`npm run verify` also checks the fork's own decisions, listed as
-`forkInvariants` and `routingRegressions` in `scripts/verify.mjs`. A sync that
-drops one of them, or brings back upstream wording that bypasses the model
-routing, fails before the update pull request opens.
-
 ## Development and verification
 
 ```bash
@@ -135,8 +130,12 @@ bun install --cwd skills/statechart-dashboard/scripts --frozen-lockfile
 bun test skills/statechart-dashboard/scripts
 ```
 
-`npm run verify` checks skill inventory, frontmatter, local references, manifests,
-the upstream lock, and forbidden vendor-specific runtime bindings.
+`npm run verify` checks that every skill and agent has matching frontmatter, that
+links, `skill://` references, and named skills resolve, and that no merge
+conflict markers remain. It also checks that the adapter's Model routing table
+covers exactly the config lines `setup-pstack` writes, routes only to agents in
+its roster, and that an agent made for one config line names no model but its
+own override.
 
 ## Host contract
 
