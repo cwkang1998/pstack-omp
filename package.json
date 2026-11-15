@@ -35,8 +35,11 @@
     "upstream.lock.json"
   ],
   "scripts": {
+    "validate": "node scripts/validate-plugin.mjs",
     "verify": "node scripts/verify.mjs",
+    "check:docs": "node scripts/check-pstack-docs.mjs",
     "test:sync": "node --test scripts/sync-upstream.test.mjs",
+    "test:skills": "node --disable-warning=ExperimentalWarning --test skills/*/scripts/test/*.test.ts",
     "sync:check": "node scripts/sync-upstream.mjs --check",
     "sync:apply": "node scripts/sync-upstream.mjs --apply"
   }

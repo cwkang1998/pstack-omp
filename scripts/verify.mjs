@@ -29,7 +29,7 @@ function frontmatter(source) {
 
 const skillDirs = (await readdir(skillsRoot, { withFileTypes: true })).filter((entry) => entry.isDirectory()).map((entry) => entry.name);
 const skillFiles = await filesUnder(skillsRoot);
-const markdownFiles = [...skillFiles, ...(await filesUnder(agentsRoot)), join(root, "README.md")].filter((path) => path.endsWith(".md"));
+const markdownFiles = [...skillFiles, ...(await filesUnder(agentsRoot))].filter((path) => path.endsWith(".md"));
 
 for (const name of skillDirs) {
   const path = join(skillsRoot, name, "SKILL.md");

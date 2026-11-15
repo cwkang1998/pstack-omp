@@ -1,0 +1,49 @@
+name: Validate package
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-save --prefix skills/statechart/scripts
+
+      - name: Validate plugin manifest
+        run: npm run validate
+
+      - name: Verify package
+        run: npm run verify
+
+      - name: Check docs
+        run: npm run check:docs
+
+      - name: Test updater
+        run: npm run test:sync
+
+      - name: Test skill scripts
+        run: npm run test:skills
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Test bundled scripts
+        run: |
+          bun install --cwd skills/poteto-mode/scripts --frozen-lockfile
+          bun test watch-pr check-plan.test.ts
+          bunx tsc --project skills/poteto-mode/scripts/watch-pr/tsconfig.json --noEmit --strict
+          bun install --cwd skills/statechart-dashboard/scripts --frozen-lockfile
+          bun test skills/statechart-dashboard/scripts

@@ -114,7 +114,9 @@ const launcherTools = () => {
 };
 
 const linkedLauncher = () => {
-  const links = fs.mkdtempSync(path.join(os.tmpdir(), "statechart-links-"));
+  // The relative link must be computed from the directory the kernel resolves it in, so start from the real path
+  // (macOS's temp directory sits under /var, a symlink to /private/var).
+  const links = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), "statechart-links-"));
   const [first, second] = [path.join(links, "a"), path.join(links, "b")];
   fs.mkdirSync(first);
   fs.mkdirSync(second);

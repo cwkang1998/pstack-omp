@@ -29,11 +29,22 @@ jobs:
       - name: Apply safe upstream update
         run: node scripts/sync-upstream.mjs --apply
 
+      - name: Validate plugin manifest
+        run: npm run validate
+
       - name: Verify package
         run: npm run verify
 
+      - name: Check docs
+        run: npm run check:docs
+
       - name: Test updater
         run: npm run test:sync
+
+      - name: Test skill scripts
+        run: |
+          npm install --no-save --prefix skills/statechart/scripts
+          npm run test:skills
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
