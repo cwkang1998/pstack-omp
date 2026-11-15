@@ -130,8 +130,12 @@ bun install --cwd skills/statechart-dashboard/scripts --frozen-lockfile
 bun test skills/statechart-dashboard/scripts
 ```
 
-`npm run verify` checks skill inventory, frontmatter, local references, manifests,
-the upstream lock, and forbidden vendor-specific runtime bindings.
+`npm run verify` checks that every skill and agent has matching frontmatter, that
+links, `skill://` references, and named skills resolve, and that no merge
+conflict markers remain. It also checks that the adapter's Model routing table
+covers exactly the config lines `setup-pstack` writes, routes only to agents in
+its roster, and that an agent made for one config line names no model but its
+own override.
 
 ## Host contract
 

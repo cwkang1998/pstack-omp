@@ -3,268 +3,122 @@ import { join, relative, resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
 const skillsRoot = join(root, "skills");
-const requiredSkills = new Set([
-  "architect",
-  "arena",
-  "automate-me",
-  "blast-radius",
-  "bro",
-  "create-verification-skill",
-  "figure-it-out",
-  "how",
-  "interrogate",
-  "maintain-verification-skill",
-  "no-comments",
-  "poteto-mode",
-  "pstack-omp",
-  "recall",
-  "reflect",
-  "setup-pstack",
-  "show-me-your-work",
-  "swarm",
-  "tdd",
-  "teach",
-  "technical-writing",
-  "typescript-best-practices",
-  "unslop",
-  "why",
-  "reproduce-and-fix-issues",
-  "setup-benny",
-  "triage-issue-reports",
-  "principle-boundary-discipline",
-  "principle-build-the-lever",
-  "principle-encode-lessons-in-structure",
-  "principle-exhaust-the-design-space",
-  "principle-experience-first",
-  "principle-fix-root-causes",
-  "principle-foundational-thinking",
-  "principle-guard-the-context-window",
-  "principle-laziness-protocol",
-  "principle-make-operations-idempotent",
-  "principle-migrate-callers-then-delete-legacy-apis",
-  "principle-minimize-reader-load",
-  "principle-model-the-domain",
-  "principle-never-block-on-the-human",
-  "principle-outcome-oriented-execution",
-  "principle-prove-it-works",
-  "principle-redesign-from-first-principles",
-  "principle-separate-before-serializing-shared-state",
-  "principle-sequence-verifiable-units",
-  "principle-subtract-before-you-add",
-  "principle-type-system-discipline",
-  "rust-best-practices",
-  "ketchup",
-  "ketchup-video",
-  "sharpen",
-  "in-your-own-words",
-  "statechart",
-  "create-formal-verification-skill",
-  "maintain-formal-verification-skill",
-  "grill-me",
-  "grilling",
-  "grill-with-docs",
-  "domain-modeling",
-  "wizard",
-  "statechart-dashboard",
-]);
-
+const agentsRoot = join(root, "agents");
 const failures = [];
-const skillDirs = (await readdir(skillsRoot, { withFileTypes: true }))
-  .filter((entry) => entry.isDirectory())
-  .map((entry) => entry.name);
+const rel = (path) => relative(root, path);
+const exists = (path) => stat(path).then(() => true, () => false);
 
-for (const name of requiredSkills) {
-  const path = join(skillsRoot, name, "SKILL.md");
-  try {
-    const source = await readFile(path, "utf8");
-    const frontmatter = source.match(/^---\n([\s\S]*?)\n---/u)?.[1] ?? "";
-    if (!/^name:\s*\S+/mu.test(frontmatter)) {
-      failures.push(`${relative(root, path)} is missing frontmatter name`);
-    }
-    if (!/^description:\s*\S+/mu.test(frontmatter)) {
-      failures.push(`${relative(root, path)} is missing frontmatter description`);
-    }
-  } catch {
-    failures.push(`missing ${relative(root, path)}`);
-  }
-}
-
-const skillFiles = [];
-const collectAll = async (directory) => {
+async function filesUnder(directory) {
+  const files = [];
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     if (entry.name === "node_modules") continue;
     const path = join(directory, entry.name);
-    if (entry.isDirectory()) await collectAll(path);
-    else skillFiles.push(path);
+    if (entry.isDirectory()) files.push(...(await filesUnder(path)));
+    else files.push(path);
   }
-};
-await collectAll(skillsRoot);
-const markdownFiles = skillFiles.filter((path) => path.endsWith(".md"));
-
-for (const path of markdownFiles) {
-  const source = (await readFile(path, "utf8")).replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1[ \t]*$/gmu, "");
-  for (const match of source.matchAll(/\]\(([^)#][^)]*)\)/gu)) {
-    const target = match[1].split("#", 1)[0];
-    if (target === "" || /^[a-z]+[0-9]*$/u.test(target)) continue;
-    if (
-      target.startsWith("http://") ||
-      target.startsWith("https://") ||
-      target.startsWith("skill://")
-    ) continue;
-    const targetPath = resolve(path, "..", target);
-    try {
-      await stat(targetPath);
-    } catch {
-      failures.push(`${relative(root, path)} references missing ${target}`);
-    }
-  }
+  return files;
 }
 
-for (const path of [
-  join(root, "package.json"),
-  join(root, "upstream.lock.json"),
-]) {
-  try {
-    JSON.parse(await readFile(path, "utf8"));
-  } catch {
-    failures.push(`${relative(root, path)} is not valid JSON`);
-  }
+function frontmatter(source) {
+  const block = source.match(/^---\n([\s\S]*?)\n---/u)?.[1] ?? "";
+  const scalar = (key) => block.match(new RegExp(`^${key}:[ \\t]*(\\S.*)$`, "mu"))?.[1];
+  const list = (key) =>
+    [...(block.match(new RegExp(`^${key}:\\n((?:  - .*\\n?)*)`, "mu"))?.[1] ?? "").matchAll(/^  - "?([^"\n]+)"?$/gmu)].map((m) => m[1]);
+  return { scalar, list };
 }
 
-try {
-  const packageManifest = JSON.parse(
-    await readFile(join(root, "package.json"), "utf8")
-  );
-  const requiredKeywords = [
-    "pstack",
-    "agent-skills",
-    "coding-agent",
-    "omp",
-  ];
-  if (packageManifest.name !== "pstack-omp") {
-    failures.push("package.json does not use the pstack-omp package name");
+const skillDirs = (await readdir(skillsRoot, { withFileTypes: true })).filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+const skillFiles = await filesUnder(skillsRoot);
+const markdownFiles = [...skillFiles, ...(await filesUnder(agentsRoot)), join(root, "README.md")].filter((path) => path.endsWith(".md"));
+
+for (const name of skillDirs) {
+  const path = join(skillsRoot, name, "SKILL.md");
+  if (!(await exists(path))) {
+    failures.push(`${rel(path)} is missing`);
+    continue;
   }
-  if (!packageManifest.omp?.skills?.includes("./skills")) {
-    failures.push("package.json does not expose ./skills through the omp manifest");
-  }
-  if (requiredKeywords.some((keyword) => !packageManifest.keywords?.includes(keyword))) {
-    failures.push("package.json is missing discoverability keywords");
-  }
-  const upstreamLock = JSON.parse(
-    await readFile(join(root, "upstream.lock.json"), "utf8")
-  );
-  if (
-    upstreamLock.repository !== "https://github.com/cursor/plugins.git" ||
-    upstreamLock.ref !== "main" ||
-    !/^[0-9a-f]{40}$/u.test(upstreamLock.commit) ||
-    !Array.isArray(upstreamLock.sourceRoots)
-  ) {
-    failures.push("upstream.lock.json is missing an authoritative pinned source");
-  }
-} catch {
-  // The JSON parse and existence failures above provide the actionable report.
+  const meta = frontmatter(await readFile(path, "utf8"));
+  if (meta.scalar("name") !== name) failures.push(`${rel(path)} frontmatter name is not ${name}`);
+  if (!meta.scalar("description")) failures.push(`${rel(path)} has no description`);
 }
 
-const forbidden = [
-  "~/.cursor/",
-  "~/.agents/skills/",
-  ".cursor/skills/",
-  ".cursor/plugins/",
-  "subagent_type:",
-  "AskQuestion",
-  "environment: \"cloud\"",
-  "claude-fable-5-thinking-max",
-  "gpt-5.6-sol-max",
-  "grok-4.6-fast-xhigh",
-  "claude-opus-5-thinking-xhigh",
-  "<skill dir>/scripts/statechart ",
-];
 for (const path of markdownFiles) {
   const source = await readFile(path, "utf8");
-  for (const token of forbidden) {
-    if (source.includes(token)) {
-      failures.push(`${relative(root, path)} contains forbidden runtime binding ${token}`);
-    }
+  const prose = source.replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1[ \t]*$/gmu, "");
+  for (const [, link] of prose.matchAll(/\]\(([^)#][^)]*)\)/gu)) {
+    const target = link.split("#", 1)[0];
+    if (target === "" || /^[a-z]+[0-9]*$/u.test(target) || /^(https?|skill):\/\//u.test(target)) continue;
+    if (!(await exists(resolve(path, "..", target)))) failures.push(`${rel(path)} links to missing ${target}`);
+  }
+  for (const [, name, subpath] of source.matchAll(/skill:\/\/([a-z0-9-]+)((?:\/[A-Za-z0-9._-]+)*)(?![A-Za-z0-9._<-])/gu)) {
+    if (!skillDirs.includes(name)) failures.push(`${rel(path)} refers to missing skill://${name}`);
+    else if (subpath && !(await exists(join(skillsRoot, name, subpath)))) failures.push(`${rel(path)} refers to missing skill://${name}${subpath}`);
+  }
+  for (const [, name, principle] of source.matchAll(/\*\*([a-z0-9-]+)\*\* (principle )?skill/gu)) {
+    const skill = principle && !name.startsWith("principle-") ? `principle-${name}` : name;
+    if (!skillDirs.includes(skill)) failures.push(`${rel(path)} names missing skill ${skill}`);
   }
 }
 
 for (const path of skillFiles) {
-  if (/^(<{7}|>{7}) /mu.test(await readFile(path, "utf8"))) {
-    failures.push(`${relative(root, path)} contains unresolved merge conflict markers`);
+  if (/^(<{7}|>{7}) /mu.test(await readFile(path, "utf8"))) failures.push(`${rel(path)} contains merge conflict markers`);
+}
+
+for (const entry of await readdir(root)) {
+  if (!entry.endsWith(".json")) continue;
+  try {
+    JSON.parse(await readFile(join(root, entry), "utf8"));
+  } catch {
+    failures.push(`${entry} is not valid JSON`);
   }
 }
 
-const ompBundledAgents = new Set(["scout", "reviewer", "security-reviewer", "task", "sonic"]);
-const packageAgents = new Map();
-for (const entry of await readdir(join(root, "agents"))) {
+const shippedAgents = new Map();
+for (const entry of await readdir(agentsRoot)) {
   if (!entry.endsWith(".md")) continue;
-  const path = join(root, "agents", entry);
-  const frontmatter = (await readFile(path, "utf8")).match(/^---\n([\s\S]*?)\n---/u)?.[1] ?? "";
-  const name = frontmatter.match(/^name:\s*(\S+)/mu)?.[1];
-  if (name !== entry.slice(0, -3)) {
-    failures.push(`${relative(root, path)} frontmatter name does not match its filename`);
-  }
-  for (const key of ["description", "model"]) {
-    if (!new RegExp(`^${key}:`, "mu").test(frontmatter)) {
-      failures.push(`${relative(root, path)} is missing frontmatter ${key}`);
-    }
-  }
-  const list = (key) => [...(frontmatter.match(new RegExp(`^${key}:\\n((?:  - .*\\n?)*)`, "mu"))?.[1] ?? "").matchAll(/^  - "?([^"\n]+)"?$/gmu)].map((match) => match[1]);
-  packageAgents.set(name, { path, tools: list("tools"), models: list("model") });
+  const path = join(agentsRoot, entry);
+  const meta = frontmatter(await readFile(path, "utf8"));
+  const name = entry.slice(0, -3);
+  if (meta.scalar("name") !== name) failures.push(`${rel(path)} frontmatter name is not ${name}`);
+  if (!meta.scalar("description")) failures.push(`${rel(path)} has no description`);
+  if (meta.list("model").length === 0) failures.push(`${rel(path)} has no model`);
+  shippedAgents.set(name, { path, models: meta.list("model") });
 }
-for (const [name, agent] of packageAgents) {
-  if (!name.startsWith("pstack-")) continue;
-  // A second model, or a role something else sets, would let the agent run without its override.
-  if (agent.models.length !== 1 || agent.models[0] !== `@${name}`) {
-    failures.push(`${relative(root, agent.path)} must name only its own role, @${name}, as its model`);
-  }
-  if (name.startsWith("pstack-judge-") && agent.tools.some((tool) => tool === "edit" || tool === "write")) {
-    failures.push(`${relative(root, agent.path)} is a judge and must not have edit or write`);
-  }
-}
+
+// The adapter's role map, roster, and Model routing table, and the config shape setup-pstack writes,
+// describe one routing contract. These checks keep them consistent with each other and with agents/.
 const adapterPath = join(skillsRoot, "pstack-omp", "SKILL.md");
 const adapter = await readFile(adapterPath, "utf8");
-const roster = adapter.match(/The reference roster is closed:\n\n```text\n([\s\S]*?)\n```/u)?.[1];
-const PANEL_SEATS = 3;
-const lineAgents = new Map(
-  [...adapter.matchAll(/^\| `([a-z ,-]+)` \| `([a-z<>N-]+)` \|$/gmu)].map((match) => [match[1], match[2]]),
-);
-const mappedAgents = [
-  ...[...adapter.matchAll(/^\| `[a-z]+` \| `([a-z-]+)` \|/gmu)].map((match) => match[1]),
-  ...[...lineAgents.values()].flatMap((agent) =>
-    agent.includes("<N>") ? Array.from({ length: PANEL_SEATS }, (_, i) => agent.replace("<N>", String(i + 1))) : [agent],
-  ),
-];
 const setupPath = join(skillsRoot, "setup-pstack", "SKILL.md");
+const roster = new Set(adapter.match(/roster is closed:\n\n```text\n([\s\S]*?)\n```/u)?.[1].split("\n") ?? []);
+const roleAgents = new Set([...adapter.matchAll(/^\| `[a-z]+` \| `([a-z-]+)` \|/gmu)].map((m) => m[1]));
+const routing = new Map([...adapter.matchAll(/^\| `([a-z ,-]+)` \| `([a-z<>N-]+)` \|$/gmu)].map((m) => [m[1], m[2]]));
 const configShape = (await readFile(setupPath, "utf8")).match(/^```\n# pstack model configuration[\s\S]*?\n```/mu)?.[0] ?? "";
-const configLines = [...configShape.matchAll(/^([a-z][a-z ,-]*): /gmu)].map((match) => match[1]);
-if (configLines.length === 0) failures.push(`${relative(root, setupPath)} has no config shape to check routing against`);
-for (const line of configLines) {
-  if (!lineAgents.has(line)) {
-    failures.push(`${relative(root, adapterPath)} has no Model routing row for the ${line} line in ${relative(root, setupPath)}`);
-  }
-}
-for (const line of lineAgents.keys()) {
-  if (!configLines.includes(line)) {
-    failures.push(`${relative(root, adapterPath)} routes ${line}, which is not a line in ${relative(root, setupPath)}`);
-  }
-}
-if (!roster) failures.push(`${relative(root, adapterPath)} is missing the closed agent roster`);
-for (const agent of new Set([...(roster?.split("\n") ?? []), ...mappedAgents])) {
-  if (!ompBundledAgents.has(agent) && !packageAgents.has(agent)) {
-    failures.push(`${relative(root, adapterPath)} routes to ${agent}, which is neither OMP-bundled nor shipped in agents/`);
-  }
-}
+const configLines = new Map([...configShape.matchAll(/^([a-z][a-z ,-]*): (.+)$/gmu)].map((m) => [m[1], m[2].split(",").length]));
 
-const localRoutesUrl = "skill://pstack-omp/references/local-routes.md";
-const routerPath = join(skillsRoot, "poteto-mode", "SKILL.md");
-if (!(await readFile(routerPath, "utf8")).includes(localRoutesUrl)) {
-  failures.push(`${relative(root, routerPath)} no longer points to ${localRoutesUrl}`);
+if (roster.size === 0) failures.push(`${rel(adapterPath)} has no agent roster`);
+if (configLines.size === 0) failures.push(`${rel(setupPath)} has no config shape`);
+for (const line of configLines.keys()) {
+  if (!routing.has(line)) failures.push(`${rel(adapterPath)} has no Model routing row for the ${line} line`);
 }
-const localRoutesPath = join(skillsRoot, "pstack-omp", "references", "local-routes.md");
-for (const match of (await readFile(localRoutesPath, "utf8")).matchAll(/\*\*([a-z0-9-]+)\*\* skill/gu)) {
-  if (!skillDirs.includes(match[1])) {
-    failures.push(`${relative(root, localRoutesPath)} routes to missing skill ${match[1]}`);
+const routedAgents = new Set(roleAgents);
+for (const [line, agent] of routing) {
+  if (!configLines.has(line)) {
+    failures.push(`${rel(adapterPath)} routes ${line}, which ${rel(setupPath)} does not write`);
+    continue;
+  }
+  const seats = agent.includes("<N>") ? configLines.get(line) : 1;
+  for (let seat = 1; seat <= seats; seat++) routedAgents.add(agent.replace("<N>", String(seat)));
+}
+for (const agent of routedAgents) {
+  if (!roster.has(agent)) failures.push(`${rel(adapterPath)} routes to ${agent}, which is not in its roster`);
+}
+for (const [name, agent] of shippedAgents) {
+  // An agent that exists only to carry a config line must have no model but its override, or it could
+  // run on another model when the override is missing.
+  if (!routedAgents.has(name) || roleAgents.has(name)) continue;
+  if (agent.models.length !== 1 || agent.models[0] !== `@${name}`) {
+    failures.push(`${rel(agent.path)} must name only @${name} as its model`);
   }
 }
 

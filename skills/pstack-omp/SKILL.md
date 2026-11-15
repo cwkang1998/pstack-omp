@@ -248,10 +248,6 @@ A spawn for a config line starts the agent below. Entry N of a panel line starts
 | `hillclimb` | `task` |
 | `judgment and prose` | `pstack-judgment` |
 | `hardest tasks` | `pstack-hardest` |
-| `how explorer` | `scout` |
-| `how explainer` | `reviewer` |
-| `why investigators` | `librarian` |
-| `why synthesizer` | `reviewer` |
 | `reflect tooling` | `pstack-reflect-tooling` |
 | `reflect judgment, divergent, synthesizer` | `reviewer` |
 | `swarm workers` | `pstack-swarm-worker` |

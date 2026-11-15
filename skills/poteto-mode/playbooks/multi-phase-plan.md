@@ -149,7 +149,7 @@ Each live lane runs in its own isolated worktree at the PR head. Drive through t
 
 ## Appendix D. Links and reading list
 
-<Docs to read before editing. Which PRs get `skill://how` and `skill://interrogate`. The trail per `skill://show-me-your-work`.>
+<Docs to read before editing. Which PRs get `skill://interrogate`. The trail per `skill://show-me-your-work`.>
 ````
 
 **Reply:** the plan path, the PR ids with their dependencies and the review-gated set, what the prototypes proved and what stays unproven, and the check script's output.
