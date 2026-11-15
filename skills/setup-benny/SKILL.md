@@ -37,7 +37,6 @@ Install pstack-omp for the target repository from a configured marketplace with 
 
 Reload the target project or start a fresh agent rooted there. Verify that these shared pstack skills resolve from project scope:
 
-- `how`
 - `why`
 - `tdd`
 - `unslop`

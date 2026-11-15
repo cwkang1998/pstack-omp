@@ -45,7 +45,7 @@ If cost is the worry, say where the tokens go and how to spend fewer. pstack spe
 
 This package is the OMP port of pstack. The [`pstack-omp`](../pstack-omp/SKILL.md) skill maps pstack's roles, delegation, and lifecycle to OMP task agents. The upstream guide also describes Cursor-only features, such as Custom Modes, `/loop`, and cloud agents, that OMP does not have.
 
-Other tools can read the skills, because they use the Agent Skills format. But most workflow skills, including `/poteto-mode`, `/how`, `/why`, and `/teach`, spawn OMP subagents with per-role models, so those parts may not work there.
+Other tools can read the skills, because they use the Agent Skills format. But most workflow skills, including `/poteto-mode`, `/how`, and `/teach`, spawn OMP subagents, some with per-role models, so those parts may not work there.
 
 ## Start a task with `/poteto-mode`
 
