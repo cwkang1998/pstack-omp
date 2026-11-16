@@ -19,6 +19,7 @@ const root = resolve(
   process.env.PSTACK_SYNC_ROOT ? "." : "..",
 );
 const lockPath = join(root, "upstream.lock.json");
+const packagePath = join(root, "package.json");
 function git(args, cwd) {
   return execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
 }
@@ -152,6 +153,13 @@ async function applyUpdate(lock, sourceRoot, commit, dryRun) {
     return 2;
   }
 
+  const upstreamManifest = join(sourceRoot, lock.path, ".cursor-plugin/plugin.json");
+  const { version } = JSON.parse(await readFile(upstreamManifest, "utf8"));
+  if (typeof version !== "string") {
+    console.error(`${relative(sourceRoot, upstreamManifest)} has no version to copy into package.json.`);
+    return 1;
+  }
+
   const changed = [];
   const conflicts = [];
   for (const mapping of lock.sourceRoots) {
@@ -204,6 +212,13 @@ async function applyUpdate(lock, sourceRoot, commit, dryRun) {
       lockPath,
       `${JSON.stringify({ ...lock, commit }, null, 2)}\n`,
     );
+  }
+  const manifest = JSON.parse(await readFile(packagePath, "utf8"));
+  if (manifest.version !== version) {
+    console.log(`${dryRun ? "Would set" : "Set"} package.json version ${manifest.version} -> ${version}.`);
+    if (!dryRun) {
+      await writeFile(packagePath, `${JSON.stringify({ ...manifest, version }, null, 2)}\n`);
+    }
   }
   if (conflicts.length > 0) {
     console.error(`${conflicts.length} OMP-adapted files have merge conflicts to resolve:`);

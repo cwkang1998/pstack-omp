@@ -7,6 +7,15 @@ import test from "node:test";
 
 import { normalizeContent } from "./sync-upstream.mjs";
 
+async function writeUpstreamVersion(source, version) {
+  await mkdir(join(source, "pstack/.cursor-plugin"), { recursive: true });
+  await writeFile(join(source, "pstack/.cursor-plugin/plugin.json"), `${JSON.stringify({ name: "pstack", version })}\n`);
+}
+
+async function writePackageVersion(target, version) {
+  await writeFile(join(target, "package.json"), `${JSON.stringify({ name: "pstack-omp", version }, null, 2)}\n`);
+}
+
 test("normalization removes the supported Cursor runtime bindings", () => {
   const source = [
     "config: ~/.cursor/rules/pstack-models.mdc",
@@ -36,6 +45,8 @@ test("apply updates an upstream-owned file and advances the lock", async () => {
       { recursive: true },
     );
     await mkdir(join(target, "skills"), { recursive: true });
+    await writeUpstreamVersion(source, "1.0.0");
+    await writePackageVersion(target, "1.0.0");
     await writeFile(
       join(source, "pstack/skills/blast-radius/SKILL.md"),
       "---\nname: blast-radius\ndescription: source\n---\nagent: Task subagent\n",
@@ -62,6 +73,7 @@ test("apply updates an upstream-owned file and advances the lock", async () => {
     await chmod(join(source, "pstack/skills/blast-radius/scripts/run"), 0o755);
     await mkdir(join(target, "skills/blast-radius/scripts"), { recursive: true });
     await writeFile(join(target, "skills/blast-radius/scripts/run"), "#!/bin/sh\n", { mode: 0o644 });
+    await writeUpstreamVersion(source, "1.1.0");
     execFileSync("git", ["add", "."], { cwd: source });
     execFileSync("git", ["commit", "-q", "-m", "update"], { cwd: source });
     const updated = execFileSync("git", ["rev-parse", "HEAD"], { cwd: source, encoding: "utf8" }).trim();
@@ -94,6 +106,8 @@ test("apply updates an upstream-owned file and advances the lock", async () => {
     assert.equal(runMode & 0o111, 0o111);
     const lock = JSON.parse(await readFile(join(target, "upstream.lock.json"), "utf8"));
     assert.equal(lock.commit, updated);
+    const manifest = JSON.parse(await readFile(join(target, "package.json"), "utf8"));
+    assert.equal(manifest.version, "1.1.0");
   } finally {
     await rm(fixture, { recursive: true, force: true });
   }
@@ -108,6 +122,8 @@ async function syncAdaptedFile({ pinned, latest, adapted, runs = 1 }) {
   await mkdir(dirname(upstreamFile), { recursive: true });
   await mkdir(join(target, "skills/poteto-mode/playbooks"), { recursive: true });
   await writeFile(upstreamFile, pinned);
+  await writeUpstreamVersion(source, "1.0.0");
+  await writePackageVersion(target, "1.0.0");
   git("init", "-q", "-b", "main");
   git("config", "user.email", "test@example.invalid");
   git("config", "user.name", "pstack test");

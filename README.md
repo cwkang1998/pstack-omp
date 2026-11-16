@@ -260,9 +260,12 @@ The updater:
    and upstream edits land around them.
 4. Leaves conflict markers where upstream and the OMP port changed the same
    lines, and exits with status 2 until they are resolved.
-5. Runs the manifest, package, docs, updater, and skill script checks, the Bun
+5. Advances the pin in `upstream.lock.json` and copies the upstream
+   `.cursor-plugin/plugin.json` version into `package.json`, so the installed
+   version matches the pinned upstream release.
+6. Runs the manifest, package, docs, updater, and skill script checks, the Bun
    tests, and strict TypeScript checking.
-6. Opens a pull request only after those checks pass. When only the docs check
+7. Opens a pull request only after those checks pass. When only the docs check
    fails, for example because upstream added a skill the README tables do not
    list yet, it opens the pull request as a draft with the failures in its body.
    Add the missing rows on that branch before merging.
