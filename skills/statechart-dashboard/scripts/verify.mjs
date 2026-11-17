@@ -27,7 +27,13 @@ export async function verify(page) {
       continue;
     }
     await button.click();
-    await page.waitForFunction(title => document.querySelector('main h1')?.textContent === title, { timeout: 5000 }, c.title);
+    // Two charts can share a title, so only the id in the navigation shows that this chart is open.
+    await page.waitForFunction(
+      (id, title) => document.querySelector('nav [aria-current="page"]')?.dataset.open === id && document.querySelector('main h1')?.textContent === title,
+      { timeout: 5000 },
+      c.id,
+      c.title,
+    );
 
     if (c.drawn) {
       await page.click('[data-zoom="fit"]');
