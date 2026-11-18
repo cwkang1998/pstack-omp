@@ -7,6 +7,7 @@ const agentsRoot = join(root, "agents");
 const failures = [];
 const rel = (path) => relative(root, path);
 const exists = (path) => stat(path).then(() => true, () => false);
+const requiredSkills = ["pstack-profile"];
 
 async function filesUnder(directory) {
   const files = [];
@@ -28,6 +29,9 @@ function frontmatter(source) {
 }
 
 const skillDirs = (await readdir(skillsRoot, { withFileTypes: true })).filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+for (const name of requiredSkills) {
+  if (!skillDirs.includes(name)) failures.push(`skills/${name} is missing`);
+}
 const skillFiles = await filesUnder(skillsRoot);
 const markdownFiles = [...skillFiles, ...(await filesUnder(agentsRoot)), join(root, "README.md")].filter((path) => path.endsWith(".md"));
 

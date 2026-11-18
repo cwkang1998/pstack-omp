@@ -47,3 +47,5 @@ jobs:
           bunx tsc --project skills/poteto-mode/scripts/watch-pr/tsconfig.json --noEmit --strict
           bun install --cwd skills/statechart-dashboard/scripts --frozen-lockfile
           bun test skills/statechart-dashboard/scripts
+          bun install --cwd skills/pstack-profile/scripts --frozen-lockfile
+          bun test skills/pstack-profile/scripts
