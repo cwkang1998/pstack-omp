@@ -7,5 +7,6 @@ The **poteto-mode** skill reads this file through its fork-local routes trigger.
 - Code adds or renames a domain term, or makes a decision that is hard to reverse, surprising without context, and the result of a real tradeoff → the **domain-modeling** skill. It updates `.pstack/docs/GLOSSARY.md` when the term settles, or offers an ADR in `.pstack/docs/adr/` for the decision.
 - A step only the human can perform, such as a third-party dashboard, a credential, a CI secret, or a one-off cutover → the **wizard** skill. Generate the wizard instead of writing the steps into the reply.
 - A **statechart** run wrote one or more output folders, or the reader wants several statecharts in one view → the **statechart-dashboard** skill. Build and open its page as part of the statechart hand-off. The Mermaid block still goes in the reply.
+- The operator asks to save, compare, or switch pstack model profiles → the **pstack-profile** skill.
 
 `grilling`, `grill-me`, and `grill-with-docs` have no route. They run only when the operator explicitly asks to be grilled.
