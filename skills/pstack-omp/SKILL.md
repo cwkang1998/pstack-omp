@@ -260,7 +260,7 @@ Before each spawn for a config line, read `cfg://task/agentModelOverrides` and c
 
 Lines that share an agent must name the same model and level, and the comparison enforces it. `inherit-parent` and `auto` are not valid values, because an override needs a concrete model.
 
-Send no `effort` on a spawn for a config line, because the override sets the level and `effort` would replace it. If a spawn fails, report the error. Never start the role on another agent or model. Report the resolved model when independence matters.
+Send no `effort` on a spawn to an agent that has a `task.agentModelOverrides` entry, whether or not a config line names it. The override sets the level, and `effort` would replace it. OMP does not apply `effort` relative to the override. It picks from the model's own ladder, `lo` the lowest level, `med` the middle one and `hi` the highest, capped by `task.maxEffort`. So `hi` on a `:xhigh` override runs at `max` under the default cap. If a spawn fails, report the error. Never start the role on another agent or model. Report the resolved model when independence matters.
 
 ## Writing
 

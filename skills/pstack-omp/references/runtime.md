@@ -50,6 +50,12 @@ Use concrete `provider/model-id:level` values in configuration only when OMP's
 live model inventory reported them. A missing line means the role's default
 agent. A panel is a list of up to three models, and its size controls fan-out.
 
+`/setup-pstack` step 5 also sets `task.maxEffort` in the global OMP config to the
+level its budget label names: `max` for unlimited, `xhigh` for large, `high` for
+medium, and `medium` for small. OMP maps a per-spawn `effort` of `hi` to the
+model's top level, so without this cap `hi` runs at `max` under any budget. The
+cap does not change `task.agentModelOverrides` levels.
+
 The optional configuration path is `$PSTACK_CONFIG`. If it is unset, use
 `.pstack/config.md` in the current project for project-local settings. Do not
 write to a vendor-specific home directory.
