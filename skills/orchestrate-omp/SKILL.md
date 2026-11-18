@@ -32,12 +32,14 @@ Use the exact names exposed by the live `task` tool; its inventory is authoritat
 
 When the live task schema exposes `effort`, match it to the assignment: `lo` for narrow questions, `med` for routine work, and `hi` when ambiguity or consequence justifies it. Otherwise rely on the selected agent's configured model role; do not pass an unavailable field.
 
+Read `cfg://task/agentModelOverrides` before dispatch. Pass no `effort` to an agent with an entry there, because its configured level must stand. OMP maps `effort` onto the model's own ladder and replaces the entry's level, so `hi` picks the model's top level up to `task.maxEffort`.
+
 Honor read-only and blocking markers in the live inventory. Never pass the default worker's name explicitly.
 
 ## 3. Dispatch
 
 1. When the live schema exposes `tasks[]`, put independent participants in one batch so they start together and structure shared `context` as `Goal`, `Constraints`, and `Contract`. Otherwise start one participant per task call without passing `context`.
-2. Give every item a stable CamelCase `name` of at most 32 characters, the most specific specialist `agent` when one fits, and a complete standalone `task`. Omit `agent` only for the default worker. Add `effort` only when the live schema exposes it.
+2. Give every item a stable CamelCase `name` of at most 32 characters, the most specific specialist `agent` when one fits, and a complete standalone `task`. Omit `agent` only for the default worker. Add `effort` only when the live schema exposes it and the agent has no `task.agentModelOverrides` entry.
 3. Structure each assignment as `Target`, `Change`, and `Acceptance`. Include essential repository state, decisions, restrictions, and dependencies because children start without conversation history.
 4. Give every writer an exact writable scope. When the live schema exposes `isolated`, use `isolated: true` for concurrent writers that need separate workspaces, then inspect the returned metadata to learn whether changes were applied or retained as artifacts.
 5. Tell ordinary workers: `Complete this assignment directly. Do not call task or spawn subagents.` Allow nested delegation only when the assignment explicitly makes that worker a coordinator.
