@@ -9,4 +9,4 @@ The **poteto-mode** skill reads this file through its fork-local routes trigger.
 - A **statechart** run wrote one or more output folders, or the reader wants several statecharts in one view → the **statechart-dashboard** skill. Build and open its page as part of the statechart hand-off. The Mermaid block still goes in the reply.
 - The operator asks to save, compare, or switch pstack model profiles → the **pstack-profile** skill.
 
-`grilling`, `grill-me`, and `grill-with-docs` have no route. They run only when the operator explicitly asks to be grilled.
+Invoke **grill-with-docs** when the operator explicitly asks to be grilled, for example, "grill me" or "grill this plan." Do not invoke it for general design feedback or review.
