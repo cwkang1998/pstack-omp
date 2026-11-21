@@ -14,12 +14,12 @@ scripts while replacing Cursor-only runtime assumptions with an OMP adapter.
 - `poteto-mode` for routing work through the right playbook.
 - `pstack-omp` for translating roles, delegation, models, transcripts, questions,
   and long-running work to OMP.
-- `grill-me`, `grilling`, `grill-with-docs`, `domain-modeling`, and `wizard`
+- `grill-with-docs`, `domain-modeling`, and `wizard`
   from [mattpocock/skills](https://github.com/mattpocock/skills). This package
   pins them to one upstream commit. The daily upstream sync does not update them.
   `poteto-mode` routes to `domain-modeling` and `wizard`, and reads the glossary in
   `.pstack/docs/`, through `skills/pstack-omp/references/local-routes.md`. The
-  grill skills run only when you ask for them.
+  phrase "grill me" invokes `grill-with-docs`. The interview runs only on request.
 - `statechart-dashboard`, a fork-local companion to `statechart`. It builds one
   offline Chrome page from statechart output folders and rebuilds it only when an
   input changed. `poteto-mode` routes to it after a statechart run.
@@ -175,9 +175,7 @@ you want one directly.
 | [`/skill:orchestrate-omp`](./skills/orchestrate-omp/SKILL.md) | you want parallel discovery, specialist review, or partitioned implementation across OMP subagents. |
 | [`/skill:statechart-dashboard`](./skills/statechart-dashboard/SKILL.md) | you ran `/skill:statechart` and want every chart with its rules, report, spec, and notes in one offline Chrome page. |
 | [`/skill:domain-modeling`](./skills/domain-modeling/SKILL.md) | you're settling codebase terminology, editing a GLOSSARY.md, or recording an ADR. |
-| [`/skill:grill-me`](./skills/grill-me/SKILL.md) | you want a relentless interview to sharpen a plan or design. runs only when you ask. |
-| [`/skill:grill-with-docs`](./skills/grill-with-docs/SKILL.md) | the `/skill:grill-me` interview, writing the glossary and ADRs as it goes. |
-| [`/skill:grilling`](./skills/grilling/SKILL.md) | the interview the grill skills load. runs only when you ask to be grilled. |
+| [`/skill:grill-with-docs`](./skills/grill-with-docs/SKILL.md) | you explicitly ask to be grilled on a plan or design. records agreed terms in the glossary and decisions in ADRs. |
 | [`/skill:wizard`](./skills/wizard/SKILL.md) | a step only a human can do, such as provisioning, credentials, CI secrets, or a third-party dashboard. generates an interactive bash walkthrough. |
 | [`/skill:rust-best-practices`](./skills/rust-best-practices/SKILL.md) | you're reading or editing rust. |
 | [`/skill:setup-benny`](./skills/setup-benny/SKILL.md) | you're installing benny, or changing its slack, tracker, repository, routing, control, model, or budget settings. |
