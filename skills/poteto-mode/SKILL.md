@@ -14,12 +14,11 @@ The Principles section below grounds every trigger. In your reply, name each pri
 
 Remaining triggers:
 
-- Your first message on a task → tell the user, in your own words, their goal, the problem they are solving, and, if the task ships a change, the smallest change you expect to meet it. Don't wait for confirmation. If the evidence rules out the change the user asked for, show it and stop. Restate the user's goal in each subagent brief, and open each PR's `## Why` with it. Open each final report with it too, your final reply included, except after a fully specified one-line edit.
-- About to use the host's structured interaction tool on a "which approach", "how should I", or "what should this do" fork → classify it before you ask. If the answer is a fact you could observe by running something (behavior, timing, layout, output, perf, even whether an eval separates), it is not the human's to answer. Sketch it via the Prototype playbook (`skill://poteto-mode/playbooks/prototype.md`) and let the result decide. If the task is a read-only Investigation whose deliverable is a cited answer, stay in it and answer from the evidence rather than building a sketch. Reserve the question for a genuine product or preference call no experiment can settle. Under a full-autonomy grant, decide a call the grant covers, act on it, and report it, with no reply word and no offer. Under the grant, for a call only the operator can make, apply a default, report it with a full explanation, and say in plain words what the operator could tell you to do instead. The operator answers in their own words. Never give a shorthand token to type back. Gates the operator named and the Always-pause list in Autonomy still need the operator.
-- Any code → name the data shape first, and choose its organizing structure per **principle-model-the-domain**.
-- Code crossing a function boundary → the **architect** skill, parallel design exploration before implementing.
-- Parallel fan-out → the **swarm** skill for coverage matrices, races, gauntlets, and exploration partitions. Use **arena** for design or code bakeoffs with base selection and grafting.
-- Contested design → the **interrogate** skill (multi-model adversarial) before shipping.
+- First message → state the user's goal and the smallest change that meets it, then proceed. State the goal in each subagent brief, PR `## Why`, and final report. If evidence rules out the requested change, show it and stop.
+- Starting a child → start the kickoff with `Read <path>/worker.md before anything else.` Use this skill directory's absolute path for `<path>`. Then state the goal and the task per the active adapter.
+- A choice an experiment can settle → use the [Prototype playbook](playbooks/prototype.md) instead of asking the user. For a read-only investigation, answer from evidence. Ask only about a product or preference choice that evidence cannot settle.
+- Code → name the data shape first per **principle-model-the-domain**. Across a function boundary → **architect** for parallel design exploration.
+- Fan-out → **swarm**. Bakeoff → **arena**. Contested design → **interrogate** before shipping.
 - Nontrivial multi-step → write the throughput checkpoint (Feature step 3).
 - Any prose surface, your reply to the user included → the **unslop** skill. Write the reply per **Writing the reply**. Agent-facing prose also follows the host's skill-authoring guidance when available.
 - Docs, RFCs, readmes, PR descriptions, or commit messages → the **technical-writing** skill (`/technical-writing`).
@@ -112,7 +111,7 @@ Use only these canonical lifecycle protocols: **Bounded session**, **Panel**, **
 
 **Defaults for every child.** Background runs (a steer or resume of a running agent too, because a foreground call holds your turn while other reports wait), file pointers not inlined context, model per role from its line in `$PSTACK_CONFIG` (or `.pstack/config.md`), routed by the active adapter (configurable via `/setup-pstack`). Code delegates tier by difficulty. The hardest changes (cross-cutting design, gnarly concurrency, subtle algorithms) go to your strongest judgment model (the `hardest tasks` line), whether the task needs judgment on vague intent or is a precisely specified sequence of steps to execute to the letter. Trivial mechanical edits go to the `mechanical` role. Per-role lines in `$PSTACK_CONFIG` (or `.pstack/config.md`) override these defaults and the model choices in the routed skills (`how`, `why`, `arena`, `swarm`, `architect`, `interrogate`, `reflect`). A role with no line keeps its default. Each code playbook's configured model comes from its line (`feature, refactoring`, `bug-fix`, `perf-issue`, or `hillclimb`), and the hardest changes read `hardest tasks`. Prose and judgment read `judgment and prose`.
 
-**Match the effort to the job.** A spawn for a role with a line in `$PSTACK_CONFIG` (or `.pstack/config.md`) runs at the level its agent's override sets, so send no effort setting for it. To change that level, change the line and re-run `/setup-pstack`. For a role with no line, pick the reasoning level the job needs. Raise it one step, up to `max`, for the hardest or subtlest work. Lower it one step for judgment and two or more steps for routine work. Apply the level through the host task runner's effort setting when the host exposes it. Otherwise the agent's own level stands. If the host task runner rejects the level, omit the effort setting and say so.
+**Match the effort to the job.** If an agent has a `task.agentModelOverrides` entry, omit `effort` so its configured level stands. To change a level set by a pstack role line, change the line and re-run `/setup-pstack`. Otherwise pick the reasoning level the job needs. Raise it for the hardest work up to the configured `task.maxEffort`, and lower it for routine work. If the host does not take `effort` or rejects the requested level, use the agent's configured level and say so.
 
 You own every subagent's work. Review the diff and write your own summary, don't pass through what it said. A second opinion is the same prompt against a different model. Agreement is high-signal.
 
@@ -120,15 +119,7 @@ You own every subagent's work. Review the diff and write your own summary, don't
 
 ## Writing the reply
 
-Write the reply clean as you draft it. A cleanup pass after drafting does not remove these patterns.
-
-- **Short declarative sentences.** One thought per sentence, ended with a period.
-- **No long-dash character anywhere.** Write a file-list bullet as a sentence ("`main.js` owns persistence and the IPC handlers") and a bold section header as its own sentence ("**Verification.** End to end via CDP").
-- **A colon as a mid-sentence connector is also out** (unslop rule 14). A colon before a list is fine.
-- **Terse is not an excuse to drop content.** Short sentences, but every section the playbook's reply names stays: details, tradeoffs, choices, open decisions.
-- **Frame impact for the consumer and the maintainer.** Name who the work is for (an end user, a colleague importing the library) and what changes for them before any implementation detail. Then what the next engineer who owns this code inherits. If you can't say what either would notice, the work or the explanation is off.
-- **Never fabricate a link, citation, or transcript reference.** Link only artifacts you produced or read this session.
-- **Every claim carries its evidence or its label in the same sentence.** Measured, inferred, or guess. A prediction or an unseen cause is a guess. Never hand the human a check you could run.
+Use **unslop** as you write. State what changes for the user and what the maintainer inherits. Keep every section the playbook asks for. Give evidence for each claim or label it as inferred. Link only artifacts you read or produced.
 
 Every playbook ends with a reply written this way, PR link as `https://github.com/<owner>/<repo>/pull/<number>`. Each playbook's own reply lines name only the content unique to that playbook.
 

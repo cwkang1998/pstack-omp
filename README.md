@@ -253,6 +253,10 @@ model through `task.agentModelOverrides`.
 every day at 04:17 UTC and can also be started manually. The pinned baseline lives
 in `upstream.lock.json`.
 
+The port keeps OMP model overrides and profiles, the Architect and Reflect
+panels, Orchestrate, and the multi-PR plan checker. Poteto-mode points delegated
+agents to the [worker rules](./skills/poteto-mode/worker.md) in their kickoff.
+
 The updater:
 
 1. Fetches the latest upstream revision.
@@ -279,8 +283,8 @@ npm run sync:apply -- --dry-run
 npm run sync:apply
 ```
 
-Protected adaptation changes require a human merge decision. The updater never
-silently overwrites them.
+Resolve conflicts in OMP adaptations by hand. The updater also leaves files
+deleted upstream in place. Check upstream removals before merging a sync PR.
 
 ## Development and verification
 

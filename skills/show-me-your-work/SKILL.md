@@ -66,14 +66,14 @@ Correct the log, not the story. The audit never edits or removes a row, even an 
 
 ## Cross-model review of the trail
 
-Before handing back, spawn a `reviewer` subagent on a different model family from the one that did the work. Self-review is not a substitute. The subagent reads the audit trail and the run's transcript, then flags what the user should pay attention to. Not a redo of the work, a scan for what's suboptimal or risky. Set each child's reasoning effort for the job through the task runner's effort setting when the host exposes it, per the Delegation section of the **poteto-mode** skill.
+Before handing back, start a canonical `reviewer` whose model is from a different vendor than the model that did the work. Use OMP model routing and verify the resolved model. If no eligible reviewer is configured, report the gap rather than substituting self-review. The reviewer reads the trail and transcript and flags what needs the user's attention without redoing the work:
 
 - Decisions logged with weak or absent evidence.
 - Verification steps skipped or claimed without proof in the transcript.
 - Choices that look risky in hindsight (premature, scope-creeping, papering over a symptom).
 - Gaps the user would otherwise miss on a casual skim.
 
-Every reply for a run that produced a trail ends with an "Attention" section. Lead with the reviewer's model on its own line (`reviewed by <model>`), then list each flag pointing to specific rows or moments. "No flags" is a valid value. The model name is not.
+End with an "Attention" section. Lead with `reviewed by <model>` or say why no independent review ran. List each flag with its row or transcript pointer, or say "No flags" if the reviewer found none.
 
 ## Reviewing the trail
 
