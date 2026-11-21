@@ -78,7 +78,7 @@ When the flat schema is active:
 {
   "name": "parser-overflow-worker",
   "agent": "task",
-  "task": "GOAL\n...\n\nROLE\n...\n\nSCOPE\n...\n\nCONTEXT\n...\n\nACCEPTANCE\n...\n\nVERIFY\n...\n\nTIMEBOX\n...\n\nFORBIDDEN\n...\n\nREPORT\n...\n\nSTANDING\n...",
+  "task": "Read /absolute/path/to/poteto-mode/worker.md before anything else.\n\nGOAL\n...\n\nROLE\n...\n\nSCOPE\n...\n\nCONTEXT\n...\n\nACCEPTANCE\n...\n\nVERIFY\n...\n\nTIMEBOX\n...\n\nFORBIDDEN\n...\n\nREPORT\n...\n\nSTANDING\n...",
   "isolated": true
 }
 ```
@@ -98,13 +98,13 @@ Use one batch call for independent participants:
     {
       "name": "candidate-a",
       "agent": "planner",
-      "task": "Standalone brief for architecture candidate A.",
+      "task": "Read /absolute/path/to/poteto-mode/worker.md before anything else.\n\nStandalone brief for architecture candidate A.",
       "isolated": false
     },
     {
       "name": "candidate-b",
       "agent": "planner",
-      "task": "Standalone brief for architecture candidate B.",
+      "task": "Read /absolute/path/to/poteto-mode/worker.md before anything else.\n\nStandalone brief for architecture candidate B.",
       "isolated": false
     }
   ]
@@ -133,7 +133,7 @@ A task result is evidence, not completion. The root inspects the artifact and ru
 
 ## Brief shape
 
-A dispatch is forbidden until its brief contains:
+Start with the [worker rules](../poteto-mode/worker.md) pointer from poteto-mode's kickoff trigger. Then include:
 
 **GOAL**  
 One-sentence outcome executable by a stranger.
